@@ -194,78 +194,24 @@ class CourseRecommender:
     
     def _get_fallback_courses(self, skill: str, max_results: int) -> List[Dict]:
         """
-        Fallback: Return curated courses when Tavily is unavailable.
-        This is a static database of popular courses.
+        Fallback: Return curated courses from external JSON file when Tavily is unavailable.
+        Courses are loaded from app/data/fallback_courses.json for easy maintenance.
         """
         print(f"   📚 Using fallback course database")
         
-        # Curated course database (you can expand this)
-        fallback_db = {
-            'sql': [
-                {
-                    'course_name': 'SQL for Data Science',
-                    'platform': 'Coursera',
-                    'url': 'https://www.coursera.org/learn/sql-for-data-science',
-                    'description': 'Learn SQL basics for data analysis and querying databases',
-                    'rating': 4.6,
-                    'duration': '4 weeks',
-                    'cost': 'Free (audit) / $49 (certificate)'
-                },
-                {
-                    'course_name': 'Introduction to Databases and SQL',
-                    'platform': 'edX',
-                    'url': 'https://www.edx.org/learn/sql',
-                    'description': 'Comprehensive SQL course covering database fundamentals',
-                    'rating': 4.5,
-                    'duration': '5 weeks',
-                    'cost': 'Free (audit) / $99 (certificate)'
-                }
-            ],
-            'python': [
-                {
-                    'course_name': 'Python for Everybody Specialization',
-                    'platform': 'Coursera',
-                    'url': 'https://www.coursera.org/specializations/python',
-                    'description': 'Learn Python programming from scratch',
-                    'rating': 4.8,
-                    'duration': '8 months',
-                    'cost': 'Free (audit) / $49/month (certificate)'
-                }
-            ],
-            'machine-learning': [
-                {
-                    'course_name': 'Machine Learning Specialization',
-                    'platform': 'Coursera',
-                    'url': 'https://www.coursera.org/specializations/machine-learning-introduction',
-                    'description': 'Learn ML fundamentals from Andrew Ng',
-                    'rating': 4.9,
-                    'duration': '3 months',
-                    'cost': 'Free (audit) / $49/month (certificate)'
-                }
-            ],
-            'tableau': [
-                {
-                    'course_name': 'Data Visualization with Tableau',
-                    'platform': 'Coursera',
-                    'url': 'https://www.coursera.org/specializations/data-visualization',
-                    'description': 'Master Tableau for business intelligence',
-                    'rating': 4.6,
-                    'duration': '5 months',
-                    'cost': 'Free (audit) / $49/month (certificate)'
-                }
-            ],
-            'hipaa-compliance': [
-                {
-                    'course_name': 'HIPAA Training Course',
-                    'platform': 'Udemy',
-                    'url': 'https://www.udemy.com/topic/hipaa/',
-                    'description': 'Complete HIPAA compliance training for healthcare',
-                    'rating': 4.5,
-                    'duration': '3 hours',
-                    'cost': '$19.99'
-                }
-            ]
-        }
+        # Load courses from external JSON file
+        fallback_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'fallback_courses.json')
+        
+        try:
+            if os.path.exists(fallback_file):
+                with open(fallback_file, 'r', encoding='utf-8') as f:
+                    fallback_db = json.load(f)
+            else:
+                print(f"   ⚠️ Fallback courses file not found, using empty database")
+                fallback_db = {}
+        except Exception as e:
+            print(f"   ⚠️ Error loading fallback courses: {e}")
+            fallback_db = {}
         
         # Normalize skill name
         skill_lower = skill.lower().replace(' ', '-')
@@ -281,13 +227,16 @@ class CourseRecommender:
                     courses.extend(course_list[:max_results])
                     break
         
-        # Add skill_targeted field
+        # Add skill_targeted field and metadata
+        result_courses = []
         for course in courses:
-            course['skill_targeted'] = skill
-            course['source'] = 'fallback_database'
-            course['relevance_score'] = 0.8
+            course_copy = course.copy()
+            course_copy['skill_targeted'] = skill
+            course_copy['source'] = 'fallback_database'
+            course_copy['relevance_score'] = 0.8
+            result_courses.append(course_copy)
         
-        return courses[:max_results]
+        return result_courses[:max_results]
     
     def recommend_for_gaps(
         self,

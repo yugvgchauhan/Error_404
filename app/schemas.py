@@ -20,6 +20,21 @@ class UserCreate(BaseModel):
     github_url: Optional[str] = None
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating a user (all fields optional for partial updates)."""
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[str] = None
+    education: Optional[str] = None
+    university: Optional[str] = None
+    graduation_year: Optional[int] = None
+    location: Optional[str] = None
+    target_role: Optional[str] = None
+    target_sector: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+
+
 class ResumeUpload(BaseModel):
     """Schema for resume text upload."""
     resume_text: str = Field(..., min_length=100, description="Resume content as text")
@@ -60,6 +75,18 @@ class CourseCreate(BaseModel):
     certificate_url: Optional[str] = None
 
 
+class CourseUpdate(BaseModel):
+    """Schema for updating a course (all fields optional for partial updates)."""
+    course_name: Optional[str] = Field(None, min_length=3)
+    platform: Optional[str] = None
+    instructor: Optional[str] = None
+    grade: Optional[str] = None
+    completion_date: Optional[str] = None
+    duration: Optional[str] = None
+    description: Optional[str] = None
+    certificate_url: Optional[str] = None
+
+
 class CourseResponse(BaseModel):
     """Schema for course response."""
     id: int
@@ -80,6 +107,20 @@ class ProjectCreate(BaseModel):
     project_name: str = Field(..., min_length=3)
     description: str = Field(..., min_length=50)
     tech_stack: Optional[List[str]] = []
+    role: Optional[str] = None
+    team_size: Optional[int] = None
+    duration: Optional[str] = None
+    github_link: Optional[str] = None
+    deployed_link: Optional[str] = None
+    project_type: Optional[str] = None
+    impact: Optional[str] = None
+
+
+class ProjectUpdate(BaseModel):
+    """Schema for updating a project (all fields optional for partial updates)."""
+    project_name: Optional[str] = Field(None, min_length=3)
+    description: Optional[str] = None
+    tech_stack: Optional[List[str]] = None
     role: Optional[str] = None
     team_size: Optional[int] = None
     duration: Optional[str] = None

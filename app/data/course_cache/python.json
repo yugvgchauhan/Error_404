@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Python courses to build your coding skills",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/python",
+    "description": "Can I learn Python on my own?\n\nYes, you can learn Python on your own \u2014 but you may encounter issues. Beginner online Python courses on edX are strategically structured to ensure a smoother and more ef...",
+    "skill_targeted": "python",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.7050753
+  },
+  {
+    "course_name": "Best Python Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=python",
+    "description": "There are many excellent online Python courses available. For beginners, the BiteSize Python for Absolute Beginners Specialization offers a gentle introduction. For those looking to advance their skil...",
+    "skill_targeted": "python",
+    "rating": 4.4,
+    "duration": "6 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6977124
+  },
+  {
+    "course_name": "AI Python for Beginners by DeepLearning.AI",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/ai-python-for-beginners",
+    "description": "D\n\nDG\n\n5\n\nReviewed on Jun 13, 2025\n\nFue un curso bastante completo, sus contenidos eran bastante claros e intuitivos. Muy \u00fatil para entender las bases de un modelo de lenguaje.\n\nM\n\nMR\n\n5\n\nReviewed on ...",
+    "skill_targeted": "python",
+    "rating": null,
+    "duration": "2 weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5752307
+  },
+  {
+    "course_name": "Best Beginner Python Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=python&productDifficultyLevel=Beginner",
+    "description": "4.7\n\n  Rating, 4.7 out of 5 stars\n\n  \u00b7\n\n  23K reviews\n\n  Beginner \u00b7 Course \u00b7 1 - 3 Months\n Status: Free Trial\n\n  Free Trial\n\n  U\n\n  University of Michigan\n\n  ### Python Basics\n\n  Skills you'll gain: D...",
+    "skill_targeted": "python",
+    "rating": 4.7,
+    "duration": "3 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.48221022
+  },
+  {
+    "course_name": "Crash Course on Python by Google",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/python-crash-course",
+    "description": "Chaitanya A.\n\n\"Learning isn't just about being better at your job: it's so much more than that. Coursera allows me to learn without limits.\"\n\n## Learner reviews\n\n4.8\n\n40,141 reviews\n\n 5 stars\n\n  82.48...",
+    "skill_targeted": "python",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.43741554
+  }
+]
