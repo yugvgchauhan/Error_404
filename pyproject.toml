@@ -1,0 +1,16 @@
+[project]
+name = "error-404"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.128.0",
+    "http-client>=0.1.22",
+    "numpy>=2.4.1",
+    "pandas>=2.3.3",
+    "pydantic[email]>=2.12.5",
+    "seaborn>=0.13.2",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.40.0",
+]
