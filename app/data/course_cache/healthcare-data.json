@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Health Informatics Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/health/health-informatics",
+    "description": "If you are looking for top-notch advanced health informatics courses, look no further than Coursera. Their offerings include the Clinical Data Science Specialization, the Digital Health Specialization...",
+    "skill_targeted": "healthcare-data",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99984276
+  },
+  {
+    "course_name": "Healthcare Management Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/health/healthcare-management",
+    "description": "One of the best advanced healthcare management courses is the Healthcare Data Quality and Governance course on Coursera. This course gives an in-depth overview of data governance frameworks, data qual...",
+    "skill_targeted": "healthcare-data",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99943846
+  },
+  {
+    "course_name": "Health Information Literacy for Data Analytics Specialization",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/specializations/healthcare-information-literacy-data-analytics",
+    "description": "## Specialization - 4 course series\n\nThis Specialization is intended for data and technology professionals with no previous healthcare experience who are seeking an industry change to work with health...",
+    "skill_targeted": "healthcare-data",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99629277
+  }
+]

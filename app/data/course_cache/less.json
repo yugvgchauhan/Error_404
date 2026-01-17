@@ -1,0 +1,26 @@
+[
+  {
+    "course_name": "Learning English Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/language-learning/learning-english",
+    "description": "Regardless of what courses are the best fit for your needs, learning online through Coursera offers a terrific combination of quality, flexibility, and affordability. You can take courses from great s...",
+    "skill_targeted": "less",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9941801
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOopz9AgE_haqwxlJeHxZqRzwby0R8_8NRtvNc-2UPK7rnq09zHk-",
+    "description": "Music\n\nInstrumentsMusic ProductionMusic FundamentalsVocalMusic TechniquesMusic SoftwareOther Music\n\nTeaching & Academics\n\nEngineeringHumanitiesMathScienceOnline EducationSocial ScienceLanguage Learnin...",
+    "skill_targeted": "less",
+    "rating": null,
+    "duration": null,
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.97134733
+  }
+]

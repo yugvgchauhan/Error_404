@@ -128,3 +128,57 @@ class ProfileSummary(BaseModel):
     total_work_experience: int
     total_skills: int
     profile_completion: float
+
+
+# ===== JOB SCHEMAS =====
+class JobSearchRequest(BaseModel):
+    """Schema for job search request."""
+    title: str = Field(default="Healthcare Data Analyst")
+    location: str = Field(default="United States")
+    limit: int = Field(default=50, le=100)
+
+
+class JobResponse(BaseModel):
+    """Schema for job response."""
+    id: str
+    title: str
+    company: str
+    location: str
+    description: Optional[str]
+    posted_date: Optional[str]
+    salary: Optional[str]
+    url: Optional[str]
+
+
+# ===== GAP ANALYSIS SCHEMAS =====
+class SkillGap(BaseModel):
+    """Schema for skill gap information."""
+    skill: str
+    user_proficiency: float
+    market_requirement: float
+    gap: float
+    priority: str
+    impact: Optional[str]
+
+
+class GapAnalysisResponse(BaseModel):
+    """Schema for gap analysis response."""
+    user_id: int
+    target_role: str
+    overall_readiness: float
+    critical_gaps: List[SkillGap]
+    important_gaps: List[SkillGap]
+    strengths: List[SkillGap]
+
+
+# ===== COURSE RECOMMENDATION SCHEMAS =====
+class CourseRecommendation(BaseModel):
+    """Schema for course recommendation."""
+    course_name: str
+    platform: str
+    url: str
+    description: Optional[str]
+    skill_targeted: str
+    rating: Optional[float]
+    duration: Optional[str]
+    cost: Optional[str]

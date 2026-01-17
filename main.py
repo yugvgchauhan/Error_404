@@ -5,18 +5,43 @@ from typing import List, Optional
 import json
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
 from app.database import get_db, init_db
 from app import schemas
 from app.services.skill_extractor import SkillExtractor
+from app.services.resume_parser import ResumeParser
+from app.services.linkedin_job_fetcher import LinkedInJobFetcher
+from app.services.job_skill_analyzer import JobSkillAnalyzer
+from app.services.gap_analyzer import GapAnalyzer
+from app.services.course_recommender import CourseRecommender
+from app.services.github_analyzer import GitHubAnalyzer
+
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
+# Debug: Print if API keys are loaded
+print(f"🔑 RAPIDAPI_KEY loaded: {'Yes' if os.getenv('RAPIDAPI_KEY') else 'No'}")
+print(f"🔑 TAVILY_API_KEY loaded: {'Yes' if os.getenv('TAVILY_API_KEY') else 'No'}")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads/resumes"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Initialize skill extractor
+# Initialize skill extractor and resume parser
 SKILLS_FILE = os.path.join("app", "data", "healthcare_skills.json")
 skill_extractor = SkillExtractor(SKILLS_FILE)
+resume_parser = ResumeParser()
+
+# Initialize other services
+linkedin_api_key = os.getenv("RAPIDAPI_KEY", "")
+tavily_api_key = os.getenv("TAVILY_API_KEY", "")
+
+linkedin_fetcher = LinkedInJobFetcher(linkedin_api_key) if linkedin_api_key else None
+job_analyzer = JobSkillAnalyzer(skill_extractor)
+gap_analyzer = GapAnalyzer()
+course_recommender = CourseRecommender(tavily_api_key)
+github_analyzer = GitHubAnalyzer(skill_extractor)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -492,7 +517,7 @@ def extract_user_skills(user_id: int):
         
         if resume_text:
             print("🔍 Parsing resume structure...")
-            parsed_resume = skill_extractor.resume_parser.parse_resume(resume_text)
+            parsed_resume = resume_parser.parse_resume(resume_text)
             
             # Save extracted projects to database
             if parsed_resume.get('projects'):
@@ -582,7 +607,7 @@ def extract_user_skills(user_id: int):
             
             resume_skill_data = {}
             for skill in resume_skills:
-                prof, conf = skill_extractor.calculate_proficiency_from_resume(skill, resume_text)
+                prof, conf = skill_extractor.calculate_proficiency_from_text(skill, resume_text)
                 resume_skill_data[skill] = (prof, conf)
             
             if resume_skill_data:
@@ -682,8 +707,9 @@ def extract_user_skills(user_id: int):
             
             exp_skill_data = {}
             for skill in exp_skills:
-                # Work experience gets high proficiency
-                exp_skill_data[skill] = (0.80, 0.95)
+                # Calculate proficiency based on experience data
+                prof, conf = skill_extractor.calculate_proficiency_from_experience(skill, exp_dict)
+                exp_skill_data[skill] = (prof, conf)
             
             if exp_skill_data:
                 all_skill_sources.append({
@@ -730,6 +756,430 @@ def extract_user_skills(user_id: int):
             },
             "skills": aggregated_skills
         }
+
+
+# ===== LINKEDIN JOBS ENDPOINTS =====
+@app.get("/api/jobs/search")
+def search_jobs(
+    title: str = "Healthcare Data Analyst",
+    location: str = "United States",
+    limit: int = 50
+):
+    """
+    Search for jobs from LinkedIn.
+    
+    - **title**: Job title to search (e.g., "Healthcare Data Analyst")
+    - **location**: Location filter (e.g., "United States", "India")
+    - **limit**: Number of jobs to fetch (max: 100)
+    """
+    if not linkedin_fetcher:
+        raise HTTPException(status_code=503, detail="LinkedIn API not configured. Set RAPIDAPI_KEY in .env")
+    
+    jobs_data = linkedin_fetcher.fetch_jobs(title, location, limit)
+    
+    return {
+        "message": "Jobs fetched successfully",
+        "total_jobs": jobs_data['total'],
+        "cached": jobs_data.get('cached', False),
+        "search_params": jobs_data.get('search_params', {}),
+        "jobs": linkedin_fetcher.get_job_details(jobs_data)
+    }
+
+
+# ===== JOB SKILL ANALYSIS ENDPOINTS =====
+@app.post("/api/jobs/analyze")
+def analyze_job_skills(job_description: str):
+    """
+    Extract and analyze skills from a single job description.
+    
+    - **job_description**: Full job description text
+    """
+    if not job_description or len(job_description) < 50:
+        raise HTTPException(status_code=400, detail="Job description too short")
+    
+    skills = job_analyzer.extract_skills_from_job(job_description)
+    
+    return {
+        "message": "Job analyzed successfully",
+        "required_skills": skills['required'],
+        "preferred_skills": skills['preferred'],
+        "total_skills": len(skills['all']),
+        "all_skills": skills['all']
+    }
+
+
+@app.post("/api/jobs/market-analysis")
+def analyze_market_requirements(
+    title: str = "Healthcare Data Analyst",
+    location: str = "United States",
+    limit: int = 50
+):
+    """
+    Fetch jobs and analyze market skill requirements.
+    
+    Returns aggregated skill requirements across all fetched jobs.
+    """
+    if not linkedin_fetcher:
+        raise HTTPException(status_code=503, detail="LinkedIn API not configured. Set RAPIDAPI_KEY in .env")
+    
+    # Fetch jobs
+    jobs_data = linkedin_fetcher.fetch_jobs(title, location, limit)
+    jobs = linkedin_fetcher.get_job_details(jobs_data)
+    
+    if not jobs:
+        raise HTTPException(status_code=404, detail="No jobs found for analysis")
+    
+    # Analyze market requirements
+    market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+    
+    return {
+        "message": "Market analysis complete",
+        "jobs_analyzed": len(jobs),
+        "search_params": {"title": title, "location": location},
+        "market_requirements": market_requirements,
+        "top_skills": list(market_requirements.keys())[:15]
+    }
+
+
+# ===== GAP ANALYSIS ENDPOINTS =====
+@app.get("/api/users/{user_id}/gap-analysis")
+def analyze_user_gaps(
+    user_id: int,
+    job_title: str = "Healthcare Data Analyst",
+    location: str = "United States"
+):
+    """
+    Perform comprehensive skill gap analysis for a user.
+    
+    Compares user's skills against market requirements.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Verify user exists
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get user skills
+        cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
+        user_skills_rows = cursor.fetchall()
+        
+        if not user_skills_rows:
+            raise HTTPException(status_code=400, detail="No skills found for user. Run skill extraction first.")
+        
+        # Format user skills
+        user_skills = {}
+        for row in user_skills_rows:
+            skill_dict = dict(row)
+            user_skills[skill_dict['skill_name']] = {
+                'proficiency': skill_dict['proficiency'],
+                'confidence': skill_dict['confidence']
+            }
+        
+        # Get market requirements (from cache or API)
+        if linkedin_fetcher:
+            jobs_data = linkedin_fetcher.fetch_jobs(job_title, location, limit=50)
+            jobs = linkedin_fetcher.get_job_details(jobs_data)
+            market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+        else:
+            # Use sample market data if API not available
+            market_requirements = _get_sample_market_requirements()
+        
+        # Perform gap analysis
+        gap_result = gap_analyzer.analyze_gaps(user_skills, market_requirements)
+        
+        return {
+            "message": "Gap analysis complete",
+            "user_id": user_id,
+            "target_role": job_title,
+            "user_skills_count": len(user_skills),
+            "market_skills_count": len(market_requirements),
+            "overall_readiness": gap_result['overall_readiness'],
+            "summary": gap_result['summary'],
+            "critical_gaps": gap_result['critical_gaps'][:5],
+            "important_gaps": gap_result['important_gaps'][:5],
+            "emerging_gaps": gap_result['emerging_gaps'][:5],
+            "strengths": gap_result['strengths'][:5]
+        }
+
+
+def _get_sample_market_requirements() -> dict:
+    """Return sample market requirements when API is unavailable."""
+    return {
+        "python": {"frequency": 0.85, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+        "sql": {"frequency": 0.80, "requirement_level": "critical", "avg_proficiency_needed": 0.70},
+        "machine-learning": {"frequency": 0.65, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+        "data-analysis": {"frequency": 0.75, "requirement_level": "critical", "avg_proficiency_needed": 0.70},
+        "tensorflow": {"frequency": 0.45, "requirement_level": "important", "avg_proficiency_needed": 0.60},
+        "healthcare-data": {"frequency": 0.55, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+        "nlp": {"frequency": 0.40, "requirement_level": "emerging", "avg_proficiency_needed": 0.55},
+    }
+
+
+# ===== COURSE RECOMMENDATION ENDPOINTS =====
+@app.get("/api/users/{user_id}/recommended-courses")
+def get_recommended_courses(
+    user_id: int,
+    max_courses_per_skill: int = 3
+):
+    """
+    Get course recommendations based on user's skill gaps.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Verify user exists
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get user skills
+        cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
+        user_skills_rows = cursor.fetchall()
+        
+        user_skills = {}
+        for row in user_skills_rows:
+            skill_dict = dict(row)
+            user_skills[skill_dict['skill_name']] = {
+                'proficiency': skill_dict['proficiency'],
+                'confidence': skill_dict['confidence']
+            }
+        
+        # Get market requirements
+        market_requirements = _get_sample_market_requirements()
+        
+        # Perform gap analysis
+        gap_result = gap_analyzer.analyze_gaps(user_skills, market_requirements)
+        
+        # Get skills to improve (critical + important gaps)
+        skills_to_improve = [g['skill'] for g in gap_result['critical_gaps'][:3]]
+        skills_to_improve += [g['skill'] for g in gap_result['important_gaps'][:2]]
+        
+        # Get course recommendations for each skill
+        recommendations = []
+        for skill in skills_to_improve:
+            courses = course_recommender.search_courses_for_skill(skill, max_courses_per_skill)
+            recommendations.append({
+                'skill': skill,
+                'gap_priority': 'critical' if skill in [g['skill'] for g in gap_result['critical_gaps']] else 'important',
+                'courses': courses
+            })
+        
+        return {
+            "message": "Course recommendations generated",
+            "user_id": user_id,
+            "skills_targeted": len(skills_to_improve),
+            "total_courses": sum(len(r['courses']) for r in recommendations),
+            "recommendations": recommendations
+        }
+
+
+@app.get("/api/courses/search/{skill}")
+def search_courses_for_skill(skill: str, max_results: int = 5):
+    """
+    Search for courses to learn a specific skill.
+    """
+    courses = course_recommender.search_courses_for_skill(skill, max_results)
+    
+    return {
+        "skill": skill,
+        "total_courses": len(courses),
+        "courses": courses
+    }
+
+
+# ===== GITHUB ANALYSIS ENDPOINTS =====
+@app.post("/api/users/{user_id}/analyze-github")
+def analyze_user_github(user_id: int, github_url: Optional[str] = None):
+    """
+    Analyze user's GitHub profile to extract skills from repositories.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Get user
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_dict = dict(user)
+        
+        # Use provided URL or user's stored GitHub URL
+        url = github_url or user_dict.get('github_url')
+        
+        if not url:
+            raise HTTPException(status_code=400, detail="No GitHub URL provided. Pass github_url or update user profile.")
+        
+        # Analyze GitHub profile
+        result = github_analyzer.analyze_github_profile(url, max_repos=10, fetch_readmes=True)
+        
+        if 'error' in result:
+            raise HTTPException(status_code=400, detail=result['error'])
+        
+        # Save GitHub skills to database
+        skills_saved = 0
+        for skill, (proficiency, confidence) in result['skills_found'].items():
+            # Check if skill already exists
+            cursor.execute(
+                "SELECT id, proficiency FROM user_skills WHERE user_id = ? AND skill_name = ?",
+                (user_id, skill)
+            )
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Update if GitHub shows higher proficiency
+                if proficiency > existing['proficiency']:
+                    cursor.execute(
+                        "UPDATE user_skills SET proficiency = ?, confidence = ?, sources = ? WHERE id = ?",
+                        (proficiency, confidence, json.dumps(['github']), existing['id'])
+                    )
+                    skills_saved += 1
+            else:
+                # Insert new skill
+                cursor.execute('''
+                    INSERT INTO user_skills (user_id, skill_name, proficiency, confidence, source_count, sources)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (user_id, skill, proficiency, confidence, 1, json.dumps(['github'])))
+                skills_saved += 1
+        
+        conn.commit()
+        
+        return {
+            "message": "GitHub analysis complete",
+            "user_id": user_id,
+            "github_username": result['username'],
+            "repos_analyzed": result['repos_analyzed'],
+            "skills_found": len(result['skills_found']),
+            "skills_saved": skills_saved,
+            "skills": result['skills_found'],
+            "repo_details": result['repo_details']
+        }
+
+
+# ===== COMPLETE ANALYSIS PIPELINE =====
+@app.post("/api/users/{user_id}/complete-analysis")
+def run_complete_analysis(
+    user_id: int,
+    target_job: str = "Healthcare Data Analyst",
+    location: str = "United States"
+):
+    """
+    Run complete skill intelligence pipeline:
+    1. Extract skills from resume
+    2. Analyze GitHub (if available)
+    3. Fetch and analyze job market
+    4. Perform gap analysis
+    5. Generate course recommendations
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Verify user exists
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_dict = dict(user)
+        results = {"user_id": user_id, "stages": {}}
+        
+        # Stage 1: Extract skills from resume
+        print("📄 Stage 1: Extracting skills from resume...")
+        try:
+            skill_result = extract_user_skills(user_id)
+            results['stages']['skill_extraction'] = {
+                "status": "success",
+                "skills_extracted": skill_result['total_skills_extracted']
+            }
+        except Exception as e:
+            results['stages']['skill_extraction'] = {"status": "failed", "error": str(e)}
+        
+        # Stage 2: Analyze GitHub (if URL available)
+        print("🐙 Stage 2: Analyzing GitHub...")
+        github_url = user_dict.get('github_url')
+        if github_url:
+            try:
+                github_result = github_analyzer.analyze_github_profile(github_url, max_repos=5)
+                results['stages']['github_analysis'] = {
+                    "status": "success",
+                    "repos_analyzed": github_result.get('repos_analyzed', 0),
+                    "skills_found": len(github_result.get('skills_found', {}))
+                }
+            except Exception as e:
+                results['stages']['github_analysis'] = {"status": "failed", "error": str(e)}
+        else:
+            results['stages']['github_analysis'] = {"status": "skipped", "reason": "No GitHub URL"}
+        
+        # Stage 3: Get market requirements
+        print("📊 Stage 3: Analyzing job market...")
+        if linkedin_fetcher:
+            try:
+                jobs_data = linkedin_fetcher.fetch_jobs(target_job, location, limit=30)
+                jobs = linkedin_fetcher.get_job_details(jobs_data)
+                market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+                results['stages']['market_analysis'] = {
+                    "status": "success",
+                    "jobs_analyzed": len(jobs),
+                    "skills_identified": len(market_requirements)
+                }
+            except Exception as e:
+                market_requirements = _get_sample_market_requirements()
+                results['stages']['market_analysis'] = {"status": "fallback", "error": str(e)}
+        else:
+            market_requirements = _get_sample_market_requirements()
+            results['stages']['market_analysis'] = {"status": "fallback", "reason": "API not configured"}
+        
+        # Stage 4: Gap analysis
+        print("🔍 Stage 4: Performing gap analysis...")
+        cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
+        user_skills_rows = cursor.fetchall()
+        
+        user_skills = {}
+        for row in user_skills_rows:
+            skill_dict = dict(row)
+            user_skills[skill_dict['skill_name']] = {
+                'proficiency': skill_dict['proficiency'],
+                'confidence': skill_dict['confidence']
+            }
+        
+        gap_result = gap_analyzer.analyze_gaps(user_skills, market_requirements)
+        results['stages']['gap_analysis'] = {
+            "status": "success",
+            "overall_readiness": gap_result['overall_readiness'],
+            "critical_gaps": len(gap_result['critical_gaps']),
+            "strengths": len(gap_result['strengths'])
+        }
+        
+        # Stage 5: Course recommendations
+        print("📚 Stage 5: Generating course recommendations...")
+        skills_to_improve = [g['skill'] for g in gap_result['critical_gaps'][:3]]
+        recommendations = []
+        for skill in skills_to_improve:
+            courses = course_recommender.search_courses_for_skill(skill, 2)
+            recommendations.extend(courses)
+        
+        results['stages']['course_recommendations'] = {
+            "status": "success",
+            "skills_targeted": len(skills_to_improve),
+            "courses_found": len(recommendations)
+        }
+        
+        # Final summary
+        results['summary'] = {
+            "target_role": target_job,
+            "overall_readiness": gap_result['overall_readiness'],
+            "interpretation": gap_result['summary']['interpretation'],
+            "top_priorities": gap_result['summary'].get('top_3_priorities', []),
+            "user_skills": list(user_skills.keys()),
+            "critical_gaps": [g['skill'] for g in gap_result['critical_gaps'][:5]],
+            "recommended_courses": recommendations[:5]
+        }
+        
+        return results
 
 
 if __name__ == "__main__":
