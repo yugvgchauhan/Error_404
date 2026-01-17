@@ -63,6 +63,7 @@ htmlcov/
 # Project specific
 linkedin_jobs.json
 app/data/cached_jobs/
+uploads/
 
 # OS
 Thumbs.db

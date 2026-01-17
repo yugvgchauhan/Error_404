@@ -20,6 +20,11 @@ class UserCreate(BaseModel):
     github_url: Optional[str] = None
 
 
+class ResumeUpload(BaseModel):
+    """Schema for resume text upload."""
+    resume_text: str = Field(..., min_length=100, description="Resume content as text")
+
+
 class UserResponse(BaseModel):
     """Schema for user response."""
     id: int
@@ -34,6 +39,8 @@ class UserResponse(BaseModel):
     phone: Optional[str]
     linkedin_url: Optional[str]
     github_url: Optional[str]
+    resume_path: Optional[str]
+    has_resume: bool = False
     created_at: datetime
     
     class Config:

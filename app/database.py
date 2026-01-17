@@ -51,6 +51,8 @@ def init_db():
             phone TEXT,
             linkedin_url TEXT,
             github_url TEXT,
+            resume_path TEXT,
+            resume_text TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
