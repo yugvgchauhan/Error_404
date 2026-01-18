@@ -1,6 +1,7 @@
 """NLP-based skill extraction service."""
 import re
 import json
+import os
 from typing import List, Dict, Set, Tuple
 from difflib import SequenceMatcher
 from collections import defaultdict
@@ -194,7 +195,7 @@ class SkillExtractor:
         confidence = 0.7
         
         # Grade boost
-        grade = course_data.get('grade', '').upper()
+        grade = (course_data.get('grade') or '').upper()
         if grade in ['A+', 'A']:
             base_proficiency += 0.15
             confidence += 0.1
@@ -204,13 +205,13 @@ class SkillExtractor:
             base_proficiency += 0.05
         
         # Platform reputation boost
-        platform = course_data.get('platform', '').lower()
+        platform = (course_data.get('platform') or '').lower()
         if platform in ['coursera', 'edx', 'mit', 'stanford']:
             base_proficiency += 0.05
             confidence += 0.05
         
         # Course level boost (check in name/description)
-        text = f"{course_data.get('course_name', '')} {course_data.get('description', '')}".lower()
+        text = f"{course_data.get('course_name') or ''} {course_data.get('description') or ''}".lower()
         if 'advanced' in text:
             base_proficiency += 0.10
         elif 'intermediate' in text:
@@ -234,7 +235,7 @@ class SkillExtractor:
         base_proficiency = 0.60  # Base for hands-on project
         confidence = 0.75
         
-        description = project_data.get('description', '').lower()
+        description = (project_data.get('description') or '').lower()
         
         # Complexity indicators
         complexity_terms = {
@@ -256,7 +257,7 @@ class SkillExtractor:
                 confidence += 0.02
         
         # Team role boost
-        role = project_data.get('role', '').lower()
+        role = (project_data.get('role') or '').lower()
         if 'lead' in role or 'architect' in role:
             base_proficiency += 0.10
             confidence += 0.05
@@ -264,7 +265,7 @@ class SkillExtractor:
             base_proficiency += 0.05
         
         # Duration boost
-        duration = project_data.get('duration', '').lower()
+        duration = (project_data.get('duration') or '').lower()
         if any(term in duration for term in ['6 months', '7 months', '8 months', '9 months', '1 year', '2 year']):
             base_proficiency += 0.10
         elif any(term in duration for term in ['3 months', '4 months', '5 months']):
@@ -324,6 +325,58 @@ class SkillExtractor:
         
         confidence = min(0.60 + (mention_count * 0.05), 0.80)
         proficiency = min(base_proficiency, 0.85)
+        
+        return (proficiency, confidence)
+    
+    def calculate_proficiency_from_text(
+        self,
+        skill: str,
+        text: str
+    ) -> Tuple[float, float]:
+        """
+        Calculate skill proficiency from text (alias for calculate_proficiency_from_resume).
+        Returns: (proficiency, confidence)
+        """
+        return self.calculate_proficiency_from_resume(skill, text)
+    
+    def calculate_proficiency_from_experience(
+        self,
+        skill: str,
+        experience_data: Dict
+    ) -> Tuple[float, float]:
+        """
+        Calculate skill proficiency from work experience data.
+        Returns: (proficiency, confidence)
+        """
+        base_proficiency = 0.70  # Base for work experience
+        confidence = 0.80
+        
+        description = (experience_data.get('responsibilities') or '').lower()
+        skill_lower = skill.lower()
+        
+        # Count mentions
+        mention_count = description.count(skill_lower)
+        
+        # Check for leadership indicators
+        leadership_terms = ['lead', 'led', 'managed', 'architected', 'designed', 'mentor']
+        if any(term in description for term in leadership_terms):
+            base_proficiency += 0.10
+            confidence += 0.05
+        
+        # Check for expertise indicators
+        expertise_terms = ['expert', 'extensive', 'advanced', 'specialized', 'proficient']
+        if any(term in description for term in expertise_terms):
+            base_proficiency += 0.08
+        
+        # Mention frequency boost
+        if mention_count >= 4:
+            base_proficiency += 0.10
+        elif mention_count >= 2:
+            base_proficiency += 0.05
+        
+        # Cap at 0.95
+        proficiency = min(base_proficiency, 0.95)
+        confidence = min(confidence, 0.90)
         
         return (proficiency, confidence)
     

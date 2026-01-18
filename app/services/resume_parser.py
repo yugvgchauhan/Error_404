@@ -274,7 +274,7 @@ class ResumeParser:
             
             education.append(edu)
         
-        return certs
+        return education
     
     def extract_skills_section(self, skills_text: str) -> List[str]:
         """Extract skills from dedicated skills section."""
