@@ -10,19 +10,7 @@ class GapAnalyzer:
         user_skills: Dict[str, Dict],  # {skill: {proficiency, confidence}}
         market_requirements: Dict[str, Dict]  # {skill: {frequency, requirement_level, avg_proficiency_needed}}
     ) -> Dict:
-        """
-        Perform comprehensive gap analysis.
-        
-        Returns:
-            {
-                'critical_gaps': [...],
-                'important_gaps': [...],
-                'emerging_gaps': [...],
-                'strengths': [...],
-                'overall_readiness': float,
-                'summary': {...}
-            }
-        """
+
         critical_gaps = []
         important_gaps = []
         emerging_gaps = []
