@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Best TensorFlow Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=tensorflow",
+    "description": "There are many excellent online courses available for learning TensorFlow. Notable options include the DeepLearning.AI TensorFlow Developer Professional Certificate, which provides a comprehensive int...",
+    "skill_targeted": "tensorflow",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99890125
+  },
+  {
+    "course_name": "Getting started with TensorFlow 2",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/getting-started-with-tensor-flow2",
+    "description": "TensorFlow is one of the most popular libraries for deep learning, and it\u2019s widely used today amongst researchers and professionals at all levels. In this week, you will get started with using TensorF...",
+    "skill_targeted": "tensorflow",
+    "rating": null,
+    "duration": "3 weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9953181
+  },
+  {
+    "course_name": "Introduction to TensorFlow for Artificial Intelligence ...",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/introduction-tensorflow",
+    "description": "Introduction to TensorFlow for Artificial Intelligence, Machine Learning, and Deep Learning\n\nEnds soon: Gain next-level skills with Coursera Plus for $199 (regularly $399). Save now.\n\n# Introduction t...",
+    "skill_targeted": "tensorflow",
+    "rating": null,
+    "duration": "2 weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9916842
+  }
+]

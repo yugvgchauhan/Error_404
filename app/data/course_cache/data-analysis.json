@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Data Analysis Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/data-science/data-analysis",
+    "description": "If you already have a strong understanding of the field, you can gain new skills or advance your current skills with a number of specialty data analyst courses on Coursera, including IBM AI Workflow f...",
+    "skill_targeted": "data-analysis",
+    "rating": null,
+    "duration": "12 hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9996724
+  },
+  {
+    "course_name": "Best Data Analytics Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=data%20analytics",
+    "description": "There are numerous online courses available for those interested in data analytics. Some of the best options include the Google Data Analytics Professional Certificate and the IBM Data Analytics with ...",
+    "skill_targeted": "data-analysis",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9985896
+  },
+  {
+    "course_name": "Best Data Analyst Courses on Coursera [VIDEO]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/articles/best-data-analyst-courses-video",
+    "description": "# Best Data Analyst Courses on Coursera [VIDEO]\n\nWritten by Coursera Staff \u2022 Updated on\n\nIn this comprehensive guide, we'll break down the most popular data analytics courses on Coursera and help you ...",
+    "skill_targeted": "data-analysis",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99298817
+  }
+]

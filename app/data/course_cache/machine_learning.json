@@ -1,0 +1,26 @@
+[
+  {
+    "course_name": "Machine Learning Andrew Ng Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=machine%20learning%20andrew%20ng",
+    "description": "There are several excellent online courses available for learning machine learning from Andrew Ng. Notably, the IBM Machine Learning Professional Certificate offers a comprehensive introduction to the...",
+    "skill_targeted": "machine learning",
+    "rating": 4.6,
+    "duration": "6 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6439794
+  },
+  {
+    "course_name": "Best of Machine Learning & AI",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/collections/best-machine-learning-ai",
+    "description": "We curated this collection for anyone who\u2019s interested in learning about machine learning and artificial intelligence (AI). Whether you\u2019re new to these two fields or looking to advance your knowledge,...",
+    "skill_targeted": "machine learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5726516
+  }
+]
