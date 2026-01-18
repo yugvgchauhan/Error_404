@@ -74,3 +74,14 @@ Thumbs.db
 *.temp
 temp/
 tmp/
+
+# Frontend
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/out/
+**/.cache/
+**/coverage/
+.npm
+.eslintcache

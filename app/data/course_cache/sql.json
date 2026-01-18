@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Best SQL Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=sql",
+    "description": "There are numerous online SQL courses available that cater to different skill levels and learning objectives. Some of the best options include the Microsoft SQL Server Professional Certificate, which ...",
+    "skill_targeted": "sql",
+    "rating": 4.7,
+    "duration": "2 Hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.7001783
+  },
+  {
+    "course_name": "SQL for Data Science",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/sql-for-data-science",
+    "description": "Showing 3 of 17102\n\nE\n\nEL\n\n5\n\nReviewed on Jan 29, 2019\n\nPerfect course! But recommend the last main exercise do more readable and understandable. It is difficult to read in a text file, single-color t...",
+    "skill_targeted": "sql",
+    "rating": null,
+    "duration": "2 weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.3904764
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOoqNeNubVZruK67WkhXT0_BE2osrWrLhJ7ZBJURLwLnn96rpLAlH",
+    "description": "Deploy AI to AWS, GCP, Azure, Vercel with MLOps, Bedrock, SageMaker, RAG, Agents, MCP: scalable, secure and observable.Rating: 4.7 out of 5 1690 reviews 18.5 total hours 122 lectures All Levels Curren...",
+    "skill_targeted": "sql",
+    "rating": 4.7,
+    "duration": null,
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.3539422
+  }
+]

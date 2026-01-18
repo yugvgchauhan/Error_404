@@ -102,6 +102,8 @@ def get_recommended_courses(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
+        user_dict = dict(user)
+        
         # Get user skills
         cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
         user_skills_rows = cursor.fetchall()
@@ -114,8 +116,20 @@ def get_recommended_courses(
                 'confidence': skill_dict['confidence']
             }
         
-        # Get market requirements
-        market_requirements = get_sample_market_requirements()
+        # Get market requirements (from cache or API)
+        if services.has_linkedin_api():
+            linkedin_fetcher = services.linkedin_fetcher
+            job_analyzer = services.job_analyzer
+            
+            # Use user's target role and location
+            target_role = user_dict.get('target_role', 'Healthcare Data Analyst')
+            location = user_dict.get('location', 'United States')
+            
+            jobs_data = linkedin_fetcher.fetch_jobs(target_role, location, limit=30)
+            jobs = linkedin_fetcher.get_job_details(jobs_data)
+            market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+        else:
+            market_requirements = get_sample_market_requirements()
         
         # Perform gap analysis
         gap_analyzer = services.gap_analyzer

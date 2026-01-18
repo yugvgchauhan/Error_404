@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Best of Machine Learning & AI",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/collections/best-machine-learning-ai",
+    "description": "We curated this collection for anyone who\u2019s interested in learning about machine learning and artificial intelligence (AI). Whether you\u2019re new to these two fields or looking to advance your knowledge,...",
+    "skill_targeted": "machine-learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5631623
+  },
+  {
+    "course_name": "Best Beginner Machine Learning Courses & Certificates ...",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=machine%20learning&productDifficultyLevel=Beginner",
+    "description": "In summary, here are 10 of our most popular machine learning courses \u00b7 Machine Learning: DeepLearning.AI \u00b7 Mathematics for Machine Learning: Imperial College",
+    "skill_targeted": "machine-learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5617203
+  },
+  {
+    "course_name": "Learn AI with online courses and programs",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/artificial-intelligence",
+    "description": "## How to choose the best AI program for you\n\nThe artificial intelligence course or degree program that is right for you depends on your skill level, career goals, budget, and available time. Consider...",
+    "skill_targeted": "machine-learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5518883
+  }
+]

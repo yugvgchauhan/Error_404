@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Best Python Pandas Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=python%20pandas",
+    "description": "### What are the best Python Pandas courses online?\u200e\n\nThere are several excellent online courses available for learning Python Pandas. For a comprehensive learning experience, consider the Data Analys...",
+    "skill_targeted": "pandas",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.64344186
+  },
+  {
+    "course_name": "Mastering Data Analysis with Pandas",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/projects/learning-path-data-analysis-with-pandas",
+    "description": "Larry W.\n\nLearner since 2021\n\n\"When I need courses on topics that my university doesn't offer, Coursera is one of the best places to go.\"\n\nChaitanya A.\n\n\"Learning isn't just about being better at your...",
+    "skill_targeted": "pandas",
+    "rating": null,
+    "duration": "2 hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.51193684
+  },
+  {
+    "course_name": "Python for Data Analysis: Pandas & NumPy (Short Course)",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/projects/python-for-data-analysis-numpy",
+    "description": "Larry W.\n\nLearner since 2021\n\n\"When I need courses on topics that my university doesn't offer, Coursera is one of the best places to go.\"\n\nChaitanya A.\n\n\"Learning isn't just about being better at your...",
+    "skill_targeted": "pandas",
+    "rating": null,
+    "duration": "2 hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.4358301
+  }
+]

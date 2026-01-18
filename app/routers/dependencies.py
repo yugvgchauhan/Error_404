@@ -11,6 +11,7 @@ from app.services.job_skill_analyzer import JobSkillAnalyzer
 from app.services.gap_analyzer import GapAnalyzer
 from app.services.course_recommender import CourseRecommender
 from app.services.github_analyzer import GitHubAnalyzer
+from app.services.llm_skill_extractor import LLMSkillExtractor
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
@@ -45,10 +46,12 @@ class ServiceContainer:
         # Load API keys from environment
         self._rapidapi_key = os.getenv("RAPIDAPI_KEY", "")
         self._tavily_api_key = os.getenv("TAVILY_API_KEY", "")
+        self._gemini_api_key = os.getenv("GEMINI_API_KEY", "")
         
         # Log API key status
         print(f"🔑 RAPIDAPI_KEY loaded: {'Yes' if self._rapidapi_key else 'No'}")
         print(f"🔑 TAVILY_API_KEY loaded: {'Yes' if self._tavily_api_key else 'No'}")
+        print(f"🔑 GEMINI_API_KEY loaded: {'Yes' if self._gemini_api_key else 'No'}")
         
         # Initialize dependent services
         self._linkedin_fetcher = LinkedInJobFetcher(self._rapidapi_key) if self._rapidapi_key else None
@@ -56,6 +59,7 @@ class ServiceContainer:
         self._gap_analyzer = GapAnalyzer()
         self._course_recommender = CourseRecommender(self._tavily_api_key)
         self._github_analyzer = GitHubAnalyzer(self._skill_extractor)
+        self._llm_skill_extractor = LLMSkillExtractor(self._gemini_api_key) if self._gemini_api_key else None
         
         self._initialized = True
     
@@ -91,9 +95,17 @@ class ServiceContainer:
     def upload_dir(self) -> str:
         return UPLOAD_DIR
     
+    @property
+    def llm_skill_extractor(self) -> LLMSkillExtractor:
+        return self._llm_skill_extractor
+    
     def has_linkedin_api(self) -> bool:
         """Check if LinkedIn API is configured."""
         return self._linkedin_fetcher is not None
+    
+    def has_llm_api(self) -> bool:
+        """Check if LLM API is configured."""
+        return self._llm_skill_extractor is not None and self._llm_skill_extractor.is_available()
     
     def has_tavily_api(self) -> bool:
         """Check if Tavily API is configured."""

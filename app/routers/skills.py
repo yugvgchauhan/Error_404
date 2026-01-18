@@ -60,6 +60,7 @@ def extract_user_skills(user_id: int):
         user_dict = dict(user)
         all_skill_sources = []
         extracted_data = {"projects": 0, "experience": 0, "certifications": 0}
+        used_llm = False  # Track if LLM was used
         
         # 1. Parse Resume Structure and Extract Data
         resume_path = user_dict.get('resume_path')
@@ -154,15 +155,30 @@ def extract_user_skills(user_id: int):
             
             conn.commit()
             
-            # Extract skills directly from resume structure (no JSON matching)
+            # Extract skills using LLM if available, otherwise fallback to NLP
             print("🔎 Extracting skills from resume...")
-            resume_skills = skill_extractor.extract_skills_from_resume(resume_text)
-            print(f"   Found {len(resume_skills)} skills in resume")
             
-            resume_skill_data = {}
-            for skill in resume_skills:
-                prof, conf = skill_extractor.calculate_proficiency_from_text(skill, resume_text)
-                resume_skill_data[skill] = (prof, conf)
+            if services.has_llm_api():
+                print("🤖 Using LLM for skill extraction...")
+                llm_extractor = services.llm_skill_extractor
+                llm_skills = llm_extractor.extract_skills_with_proficiency(resume_text)
+                
+                resume_skill_data = {}
+                for skill_info in llm_skills:
+                    skill_name = skill_info['skill_name']
+                    resume_skill_data[skill_name] = (skill_info['proficiency'], skill_info['confidence'])
+                
+                print(f"   ✅ LLM extracted {len(resume_skill_data)} skills")
+                used_llm = True  # Mark that LLM was used
+            else:
+                print("📝 Using NLP-based skill extraction (no LLM API key)...")
+                resume_skills = skill_extractor.extract_skills_from_resume(resume_text)
+                print(f"   Found {len(resume_skills)} skills in resume")
+                
+                resume_skill_data = {}
+                for skill in resume_skills:
+                    prof, conf = skill_extractor.calculate_proficiency_from_text(skill, resume_text)
+                    resume_skill_data[skill] = (prof, conf)
             
             if resume_skill_data:
                 all_skill_sources.append({
@@ -171,9 +187,16 @@ def extract_user_skills(user_id: int):
                     'skills': resume_skill_data
                 })
         
-        # 2. Extract from Courses
-        cursor.execute("SELECT * FROM courses WHERE user_id = ?", (user_id,))
-        courses = cursor.fetchall()
+        # Skip additional NLP extraction if LLM was used (LLM already extracted comprehensive skills)
+        if used_llm:
+            print("⏭️ Skipping additional NLP extraction (LLM mode)")
+            courses = []
+            projects = []
+            experiences = []
+        else:
+            # 2. Extract from Courses
+            cursor.execute("SELECT * FROM courses WHERE user_id = ?", (user_id,))
+            courses = cursor.fetchall()
         
         print(f"📚 Processing {len(courses)} courses...")
         for course in courses:
@@ -201,9 +224,9 @@ def extract_user_skills(user_id: int):
                     'skills': course_skill_data
                 })
         
-        # 3. Extract from Projects (including newly extracted ones)
-        cursor.execute("SELECT * FROM projects WHERE user_id = ?", (user_id,))
-        projects = cursor.fetchall()
+            # 3. Extract from Projects (including newly extracted ones)
+            cursor.execute("SELECT * FROM projects WHERE user_id = ?", (user_id,))
+            projects = cursor.fetchall()
         
         print(f"🚀 Processing {len(projects)} projects...")
         for project in projects:
@@ -240,9 +263,9 @@ def extract_user_skills(user_id: int):
                     'skills': project_skill_data
                 })
         
-        # 4. Extract from Work Experience
-        cursor.execute("SELECT * FROM work_experience WHERE user_id = ?", (user_id,))
-        experiences = cursor.fetchall()
+            # 4. Extract from Work Experience
+            cursor.execute("SELECT * FROM work_experience WHERE user_id = ?", (user_id,))
+            experiences = cursor.fetchall()
         
         print(f"💼 Processing {len(experiences)} work experiences...")
         for exp in experiences:

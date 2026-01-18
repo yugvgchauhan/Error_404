@@ -11,11 +11,11 @@ class ResumeParser:
     def __init__(self):
         # Section headers to identify different parts
         self.section_patterns = {
-            'experience': r'\b(work\s+experience|professional\s+experience|experience|employment\s+history)\b',
-            'education': r'\b(education|academic\s+background|qualifications)\b',
-            'projects': r'\b(projects|personal\s+projects|academic\s+projects)\b',
-            'skills': r'\b(skills|technical\s+skills|core\s+competencies|expertise)\b',
-            'certifications': r'\b(certificate|certifications|certificates|licenses|certification)\b',
+            'experience': r'(experience|work\s+experience|professional\s+experience|employment\s+history|career\s+history)',
+            'education': r'(education|academic\s+background|qualifications|academic\s+record)',
+            'projects': r'(projects|personal\s+projects|academic\s+projects|selected\s+projects)',
+            'skills': r'(skills|technical\s+skills|core\s+competencies|expertise|technologies|tools)',
+            'certifications': r'(certifications|certificates|licenses|certification|awards)',
         }
     
     def split_into_sections(self, text: str) -> Dict[str, str]:

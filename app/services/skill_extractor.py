@@ -35,9 +35,11 @@ class SkillExtractor:
         
         # Build reverse synonym map for quick lookup
         self.synonym_map = {}
-        for canonical, variants in self.synonyms.items():
-            for variant in variants:
-                self.synonym_map[variant.lower()] = canonical
+        for variant, canonical in self.synonyms.items():
+            self.synonym_map[variant.lower()] = canonical
+            # Also add versions with spaces/hyphens swapped
+            self.synonym_map[variant.lower().replace('-', ' ')] = canonical
+            self.synonym_map[variant.lower().replace(' ', '-')] = canonical
     
     def clean_text(self, text: str) -> str:
         """Clean and normalize text."""
@@ -107,40 +109,117 @@ class SkillExtractor:
         return False
     
     def extract_skills_from_resume(self, resume_text: str) -> List[str]:
-        """Extract all skills directly from resume structure."""
+        """Extract and score skills from resume to find the most relevant ones."""
         if not resume_text:
             return []
         
-        all_skills = set()
+        # Score tracker: {canonical_name: score}
+        scores = defaultdict(float)
         
-        # Parse resume structure
+        # 1. Structured extraction
         parsed = self.resume_parser.parse_resume(resume_text)
         
-        # 1. Extract from dedicated SKILLS section
+        # Extract from dedicated SKILLS section (Highest priority)
         if parsed.get('skills'):
             for skill in parsed['skills']:
-                # Clean and normalize
-                skill_clean = skill.strip().lower()
-                if skill_clean and len(skill_clean) > 1:
-                    all_skills.add(skill_clean)
+                canonical = self._get_canonical_skill(skill)
+                if canonical:
+                    scores[canonical] += 15.0
         
-        # 2. Extract technologies from projects
+        # Extract from projects
         if parsed.get('projects'):
             for project in parsed['projects']:
                 for tech in project.get('tech_stack', []):
-                    tech_clean = tech.strip().lower()
-                    if tech_clean and len(tech_clean) > 1:
-                        all_skills.add(tech_clean)
+                    canonical = self._get_canonical_skill(tech)
+                    if canonical:
+                        scores[canonical] += 8.0
         
-        # 3. Extract technologies from work experience
+        # Extract from work experience
         if parsed.get('experience'):
             for exp in parsed['experience']:
                 for tech in exp.get('technologies_used', []):
-                    tech_clean = tech.strip().lower()
-                    if tech_clean and len(tech_clean) > 1:
-                        all_skills.add(tech_clean)
+                    canonical = self._get_canonical_skill(tech)
+                    if canonical:
+                        scores[canonical] += 8.0
         
-        return list(all_skills)
+        # 2. Taxonomy-based extraction (from entire text)
+        print("🔍 Running taxonomy-based extraction on resume...")
+        taxonomy_skills = self.extract_skills_from_text(resume_text)
+        resume_lower = resume_text.lower()
+        
+        for skill in taxonomy_skills:
+            canonical = self._get_canonical_skill(skill)
+            if not canonical: continue
+            
+            # Base taxonomy score
+            scores[canonical] += 3.0
+            
+            # Frequency boost
+            count = resume_lower.count(canonical.lower().replace('-', ' '))
+            count += resume_lower.count(canonical.lower())
+            scores[canonical] += min(count * 2.0, 10.0) # Up to 10 points for frequency
+            
+        # 3. Apply category weights and specific skill weights
+        final_scores = {}
+        for skill, score in scores.items():
+            # Apply weight from healthcare_skills.json if exists
+            weight = self.weights.get(skill, 1.0)
+            
+            # Boost if it's a technical category, penalize if it's very generic
+            category = self._get_skill_category(skill)
+            if category == 'soft-skills':
+                weight *= 0.6 # Soft skills are less "unique" technical identifiers
+            
+            final_scores[skill] = score * weight
+            
+        # 4. Filter and Limit
+        sorted_skills = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # Limit soft skills to max 4
+        result = []
+        soft_skill_count = 0
+        
+        for skill, score in sorted_skills:
+            category = self._get_skill_category(skill)
+            if category == 'soft-skills':
+                if soft_skill_count < 4:
+                    result.append(skill)
+                    soft_skill_count += 1
+            else:
+                result.append(skill)
+                
+            # Stop when we have around 18-22 skills (users usually list 15-20)
+            if len(result) >= 20:
+                break
+                
+        return result
+
+    def _get_canonical_skill(self, skill_name: str) -> str:
+        """Helper to get canonical skill name."""
+        s = skill_name.strip().lower()
+        if not s or len(s) < 2: return ""
+        
+        # Check synonym map
+        if s in self.synonym_map:
+            return self.synonym_map[s]
+            
+        # Check if it's in skills list directly
+        if s in self.skills_list:
+            return s
+            
+        # Try cleaning hyphens
+        s_hyphen = s.replace(' ', '-')
+        if s_hyphen in self.skills_list:
+            return s_hyphen
+            
+        return s # Return as is if not in taxonomy but extracted
+
+    def _get_skill_category(self, skill: str) -> str:
+        """Find category for a given skill."""
+        for category, skill_list in self.categories.items():
+            if skill in skill_list:
+                return category
+        return "other"
     
     def extract_skills_from_text(self, text: str) -> List[str]:
         """Extract skills from text using multiple techniques."""
@@ -156,15 +235,22 @@ class SkillExtractor:
         # Match against skills taxonomy
         for skill in self.skills_list:
             skill_clean = skill.lower()
+            skill_space = skill_clean.replace('-', ' ')
             
-            # Check exact match in n-grams
-            if skill_clean in ngrams:
+            # Check exact match in n-grams (both versions)
+            if skill_clean in ngrams or skill_space in ngrams:
                 found_skills.add(skill)
                 continue
             
             # Check synonym matches
             if skill_clean in self.synonym_map:
                 canonical = self.synonym_map[skill_clean]
+                if canonical in self.skills_list:
+                    found_skills.add(canonical)
+                    continue
+            
+            if skill_space in self.synonym_map:
+                canonical = self.synonym_map[skill_space]
                 if canonical in self.skills_list:
                     found_skills.add(canonical)
                     continue
@@ -298,12 +384,23 @@ class SkillExtractor:
         skill_lower = skill.lower()
         
         # Count mentions
-        mention_count = resume_lower.count(skill_lower)
+        mention_count = 0
+        skill_clean = skill.lower()
+        skill_space = skill_clean.replace('-', ' ')
         
+        # Check both hyphen and space versions
+        mention_count += resume_lower.count(skill_clean)
+        if skill_clean != skill_space:
+            mention_count += resume_lower.count(skill_space)
+            
         # Check synonyms
         if skill in self.synonyms:
             for synonym in self.synonyms[skill]:
-                mention_count += resume_lower.count(synonym.lower())
+                synonym_clean = synonym.lower()
+                mention_count += resume_lower.count(synonym_clean)
+                synonym_space = synonym_clean.replace('-', ' ')
+                if synonym_clean != synonym_space:
+                    mention_count += resume_lower.count(synonym_space)
         
         # Base proficiency from mentions
         base_proficiency = 0.50

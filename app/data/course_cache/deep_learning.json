@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Best Deeplearning.AI Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=deeplearning.ai",
+    "description": "Some of the best Deeplearning.AI courses online include the DeepLearning.AI TensorFlow Developer Professional Certificate and the TensorFlow 2 for Deep Learning Specialization. These programs offer co...",
+    "skill_targeted": "Deep Learning",
+    "rating": 4.8,
+    "duration": "4 Weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.73642004
+  },
+  {
+    "course_name": "Best Online Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses",
+    "description": "Preview\n\n  D\n\n  DeepLearning.AI\n\n  ### AI For Everyone\n\n  Skills you'll gain: AI Product Strategy, Responsible AI, Data Ethics, AI Enablement, Artificial Intelligence, Machine Learning, Data Science, ...",
+    "skill_targeted": "Deep Learning",
+    "rating": 4.8,
+    "duration": "4 Weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.47314653
+  },
+  {
+    "course_name": "DeepLearning.AI Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/partners/deeplearning-ai",
+    "description": "Available now\n\n#BreakIntoAI with Machine Learning SpecializationMathematics for Machine Learning and Data Science Specialization\n\nAvailable now\n\nMaster the Toolkit of AI and Machine LearningNatural La...",
+    "skill_targeted": "Deep Learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.466433
+  },
+  {
+    "course_name": "Learn AI with online courses and programs",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/artificial-intelligence",
+    "description": "### IBM's AI for Everyone: Master the Basics\n\nThis introductory course emphasizes AI basics, such as machine and deep learning, potential risks of AI, and career paths. Start here if you lack a techni...",
+    "skill_targeted": "Deep Learning",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.4368388
+  },
+  {
+    "course_name": "Deep Learning Specialization",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/specializations/deep-learning",
+    "description": "The Deep Learning Specialization is made up of 5 courses.\n\nWe recommend taking the courses in the prescribed order for a logical and thorough learning experience. Course 3 can also be taken as a stand...",
+    "skill_targeted": "Deep Learning",
+    "rating": null,
+    "duration": "24 hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.43194416
+  }
+]
