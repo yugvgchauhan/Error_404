@@ -6,6 +6,7 @@ from .skills import router as skills_router
 from .resume import router as resume_router
 from .jobs import router as jobs_router
 from .analysis import router as analysis_router
+from .roadmaps import router as roadmaps_router
 
 __all__ = [
     "users_router",
@@ -14,5 +15,7 @@ __all__ = [
     "skills_router",
     "resume_router",
     "jobs_router",
-    "analysis_router"
+    "analysis_router",
+    "roadmaps_router"
 ]
+

@@ -151,6 +151,31 @@ def init_db():
         )
     ''')
     
+    # Create user_roadmaps table (tracks which roadmap a user is following)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_roadmaps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            domain TEXT NOT NULL,
+            started_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Create roadmap_progress table (tracks progress on individual milestones)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS roadmap_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            domain TEXT NOT NULL,
+            milestone_id TEXT NOT NULL,
+            status TEXT DEFAULT 'not_started',
+            started_at TEXT,
+            completed_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+    
     conn.commit()
     conn.close()
     print(f"✅ Database initialized at: {DATABASE_PATH}")

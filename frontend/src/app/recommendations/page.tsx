@@ -5,16 +5,20 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { MainLayout } from '@/components/layout/Sidebar';
-import { BookOpen, ExternalLink, Clock, Search, Star, AlertCircle } from 'lucide-react';
+import { BookOpen, ExternalLink, Clock, Search, Star, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 
 interface CourseRecommendation {
     skill: string;
+    gap_priority?: string;
     courses: Array<{
-        title: string;
+        title?: string;
+        course_name?: string;
         platform: string;
         url: string;
         rating?: number;
         duration?: string;
+        description?: string;
+        cost?: string;
     }>;
 }
 
@@ -26,6 +30,8 @@ export default function RecommendationsPage() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [hasSkills, setHasSkills] = useState(true);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -38,21 +44,38 @@ export default function RecommendationsPage() {
     const loadRecommendations = async () => {
         if (!userId) return;
         setLoading(true);
+        setError(null);
         try {
-            const result = await api.getRecommendedCourses(userId);
-            console.log('Recommendations response:', result); // Debug log
-            // Transform the response - backend uses 'recommendations' not 'recommended_courses'
-            const recs: CourseRecommendation[] = [];
-            const recommendations = result.recommendations || [];
-            for (const item of recommendations) {
-                recs.push({
-                    skill: item.skill || 'General',
-                    courses: item.courses || [],
-                });
+            // First check if user has skills
+            const skills = await api.getUserSkills(userId).catch(() => []);
+            if (!skills || skills.length === 0) {
+                setHasSkills(false);
+                setLoading(false);
+                return;
             }
+            setHasSkills(true);
+
+            const result = await api.getRecommendedCourses(userId);
+            console.log('Recommendations response:', result);
+
+            // Transform the response
+            const recs: CourseRecommendation[] = [];
+            const recsData = result.recommendations || [];
+
+            for (const item of recsData) {
+                if (item.courses && item.courses.length > 0) {
+                    recs.push({
+                        skill: item.skill || 'General',
+                        gap_priority: item.gap_priority,
+                        courses: item.courses,
+                    });
+                }
+            }
+
             setRecommendations(recs);
-        } catch (error) {
-            console.error('Failed to load recommendations:', error);
+        } catch (err: any) {
+            console.error('Failed to load recommendations:', err);
+            setError(err.message || 'Failed to load recommendations');
         } finally {
             setLoading(false);
         }
@@ -64,8 +87,8 @@ export default function RecommendationsPage() {
         try {
             const result = await api.searchCoursesForSkill(searchSkill.trim());
             setSearchResults(result.courses || []);
-        } catch (error) {
-            console.error('Failed to search courses:', error);
+        } catch (err) {
+            console.error('Failed to search courses:', err);
         } finally {
             setSearching(false);
         }
@@ -81,52 +104,82 @@ export default function RecommendationsPage() {
         );
     }
 
-    return (
-        <MainLayout>
-            <div className="space-y-8 animate-fade-in">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Course Recommendations</h1>
-                    <p className="text-gray-500 mt-1">Personalized courses based on your skill gaps</p>
-                </div>
+    // No skills yet
+    if (!hasSkills) {
+        return (
+            <MainLayout>
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Course Recommendations</h1>
+                        <p className="text-gray-500 mt-1">Personalized courses based on your skill gaps</p>
+                    </div>
 
-                {/* Search Box */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Search Courses by Skill</h2>
-                    <div className="flex gap-4">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                value={searchSkill}
-                                onChange={(e) => setSearchSkill(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                                placeholder="Search for a skill (e.g., Python, Machine Learning, SQL)"
-                            />
-                        </div>
+                    <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center">
+                        <Sparkles size={48} className="mx-auto text-amber-400 mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Extract Skills First</h3>
+                        <p className="text-gray-500 mb-6">
+                            Upload your resume and extract skills to get personalized course recommendations based on your skill gaps.
+                        </p>
                         <button
-                            onClick={handleSearch}
-                            disabled={searching}
-                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
+                            onClick={() => router.push('/profile')}
+                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all"
                         >
-                            {searching ? 'Searching...' : 'Search'}
+                            Go to Profile
                         </button>
                     </div>
 
-                    {/* Search Results */}
-                    {searchResults.length > 0 && (
-                        <div className="mt-6">
-                            <h3 className="text-sm font-medium text-gray-700 mb-3">
-                                Search Results for "{searchSkill}"
-                            </h3>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {searchResults.map((course, idx) => (
-                                    <CourseCard key={idx} course={course} />
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* Search Box - always available */}
+                    <SearchBox
+                        searchSkill={searchSkill}
+                        setSearchSkill={setSearchSkill}
+                        handleSearch={handleSearch}
+                        searching={searching}
+                        searchResults={searchResults}
+                    />
                 </div>
+            </MainLayout>
+        );
+    }
+
+    return (
+        <MainLayout>
+            <div className="space-y-8 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Course Recommendations</h1>
+                        <p className="text-gray-500 mt-1">Personalized courses based on your skill gaps</p>
+                    </div>
+                    <button
+                        onClick={loadRecommendations}
+                        className="px-4 py-2 text-green-600 hover:bg-green-50 rounded-xl flex items-center gap-2 transition-all"
+                    >
+                        <RefreshCw size={16} />
+                        Refresh
+                    </button>
+                </div>
+
+                {/* Search Box */}
+                <SearchBox
+                    searchSkill={searchSkill}
+                    setSearchSkill={setSearchSkill}
+                    handleSearch={handleSearch}
+                    searching={searching}
+                    searchResults={searchResults}
+                />
+
+                {/* Error State */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+                        <AlertCircle size={32} className="mx-auto text-red-400 mb-2" />
+                        <p className="text-red-700">{error}</p>
+                        <button
+                            onClick={loadRecommendations}
+                            className="mt-4 px-4 py-2 text-red-600 hover:bg-red-100 rounded-lg transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
 
                 {/* Recommendations by Skill Gap */}
                 {recommendations.length > 0 ? (
@@ -134,16 +187,26 @@ export default function RecommendationsPage() {
                         {recommendations.map((rec, idx) => (
                             <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${rec.gap_priority === 'critical'
+                                            ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                                        }`}>
                                         <BookOpen className="text-white" size={20} />
                                     </div>
                                     <div>
                                         <h2 className="text-lg font-semibold text-gray-900">
                                             Learn {rec.skill}
                                         </h2>
-                                        <p className="text-sm text-gray-500">
-                                            {rec.courses.length} course{rec.courses.length !== 1 ? 's' : ''} recommended
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm text-gray-500">
+                                                {rec.courses.length} course{rec.courses.length !== 1 ? 's' : ''} recommended
+                                            </p>
+                                            {rec.gap_priority === 'critical' && (
+                                                <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">
+                                                    Critical Gap
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -154,23 +217,72 @@ export default function RecommendationsPage() {
                             </div>
                         ))}
                     </div>
-                ) : (
+                ) : !error && (
                     <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center">
                         <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recommendations Yet</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Skill Gaps Found</h3>
                         <p className="text-gray-500 mb-6">
-                            Upload your resume and extract skills to get personalized course recommendations.
+                            Great news! You don't have any critical skill gaps. Use the search above to find courses for any skill you want to learn.
                         </p>
                         <button
-                            onClick={() => router.push('/profile')}
+                            onClick={() => router.push('/roadmap')}
                             className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all"
                         >
-                            Go to Profile
+                            View Career Roadmaps
                         </button>
                     </div>
                 )}
             </div>
         </MainLayout>
+    );
+}
+
+// Search Box Component
+function SearchBox({ searchSkill, setSearchSkill, handleSearch, searching, searchResults }: {
+    searchSkill: string;
+    setSearchSkill: (v: string) => void;
+    handleSearch: () => void;
+    searching: boolean;
+    searchResults: any[];
+}) {
+    return (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Search Courses by Skill</h2>
+            <div className="flex gap-4">
+                <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input
+                        type="text"
+                        value={searchSkill}
+                        onChange={(e) => setSearchSkill(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                        placeholder="Search for a skill (e.g., Python, Machine Learning, SQL)"
+                    />
+                </div>
+                <button
+                    onClick={handleSearch}
+                    disabled={searching}
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
+                >
+                    {searching ? 'Searching...' : 'Search'}
+                </button>
+            </div>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+                <div className="mt-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        Search Results for "{searchSkill}"
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {searchResults.map((course, idx) => (
+                            <CourseCard key={idx} course={course} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

@@ -10,7 +10,8 @@ from app.routers import (
     skills_router,
     resume_router,
     jobs_router,
-    analysis_router
+    analysis_router,
+    roadmaps_router
 )
 
 # Initialize FastAPI app
@@ -99,6 +100,7 @@ app.include_router(skills_router)
 app.include_router(resume_router)
 app.include_router(jobs_router)
 app.include_router(analysis_router)
+app.include_router(roadmaps_router)
 
 
 # ===== MAIN ENTRY POINT =====
