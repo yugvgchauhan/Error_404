@@ -15,7 +15,7 @@ export interface Skill {
     proficiency: number;
     confidence: number;
     source_count?: number;
-    sources?: string[]; // Backend returns parsed JSON array
+    sources?: string[] | string; // Backend returns parsed JSON array
     created_at?: string;
 }
 
