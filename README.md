@@ -1,4 +1,4 @@
-# 🏥 Skill intelligence System (SkillPath)
+# 🏥 Skill Intelligence System (SkillPath)
 
 An AI-powered skill gap analysis and course recommendation platform. SkillPath extracts skills from resumes, analyzes job market requirements, identifies skill gaps, and recommends personalized learning paths.
 
@@ -35,9 +35,10 @@ An AI-powered skill gap analysis and course recommendation platform. SkillPath e
 ### Backend
 - **Framework**: FastAPI
 - **Database**: SQLite
-- **NLP**: spaCy, scikit-learn
+- **NLP**: scikit-learn, Regex-based extraction
 - **Parsing**: PyPDF2, python-docx
 - **Search**: Tavily AI, RapidAPI (LinkedIn)
+- **AI**: Google Gemini (Reasoning & Analysis)
 
 ### Frontend
 - **Framework**: Next.js 14+ (App Router)
@@ -100,8 +101,9 @@ npm install
 ### Step 3: Environment Configuration
 Create a `.env` file in the root directory:
 ```env
-RAPIDAPI_KEY=your_rapidapi_key
-TAVILY_API_KEY=your_tavily_api_key
+RAPIDAPI_KEY=your_rapidapi_key       # For LinkedIn Job Search
+TAVILY_API_KEY=your_tavily_api_key   # For Course Search
+GEMINI_API_KEY=your_gemini_api_key   # For AI Reasoning & Fallbacks
 ```
 
 ---

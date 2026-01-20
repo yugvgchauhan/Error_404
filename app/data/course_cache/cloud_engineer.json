@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Cloud Computing Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/information-technology/cloud-computing",
+    "description": "Cloud computing courses on Coursera are structured to accommodate learners at various levels of expertise:\n\n Introductory courses are designed for beginners, providing an overview of cloud computing p...",
+    "skill_targeted": "Cloud Engineer",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6063825
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOopAWcs72Y1FhNknOczjkpSpgiM5GstjfiqYIfsDoiA3wNUcF_sD",
+    "description": "Full Practice Exam included + explanations | Learn Cloud Computing | Pass the AWS Cloud Practitioner CLF-C02 exam!Rating: 4.7 out of 5 277037 reviews 14.5 total hours 282 lectures Beginner Current pri...",
+    "skill_targeted": "Cloud Engineer",
+    "rating": 4.7,
+    "duration": "8 weeks",
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.5780915
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOooKsfEnzFZ_qEcXBJKU0YrLTEM_hBs4Sp5VdtB9Gv_QiBUD7OyP",
+    "description": "Full Practice Exam included + explanations | Learn Cloud Computing | Pass the AWS Cloud Practitioner CLF-C02 exam!Rating: 4.7 out of 5 277037 reviews 14.5 total hours 282 lectures Beginner Current pri...",
+    "skill_targeted": "Cloud Engineer",
+    "rating": 4.7,
+    "duration": "8 weeks",
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.5780915
+  },
+  {
+    "course_name": "Explore how to learn cloud computing",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/cloud-computing",
+    "description": "## How to get started in cloud computing\n\nGet started with cloud computing by exploring edX cloud computing courses and programs.\n\n### Beginner\n\nCourses for beginners can teach you the basics, such as...",
+    "skill_targeted": "Cloud Engineer",
+    "rating": null,
+    "duration": "12 weeks",
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.5611433
+  },
+  {
+    "course_name": "Best AWS Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=aws",
+    "description": "Some of the best AWS courses online include the AWS Cloud Solutions Architect Professional Certificate and the AWS Cloud Support Associate Professional Certificate. These programs provide structured l...",
+    "skill_targeted": "Cloud Engineer",
+    "rating": 4.8,
+    "duration": "6 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.45304462
+  }
+]

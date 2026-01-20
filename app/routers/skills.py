@@ -61,6 +61,9 @@ def extract_user_skills(user_id: int):
         all_skill_sources = []
         extracted_data = {"projects": 0, "experience": 0, "certifications": 0}
         used_llm = False  # Track if LLM was used
+        courses = []
+        projects = []
+        experiences = []
         
         # 1. Parse Resume Structure and Extract Data
         resume_path = user_dict.get('resume_path')
@@ -168,8 +171,12 @@ def extract_user_skills(user_id: int):
                     skill_name = skill_info['skill_name']
                     resume_skill_data[skill_name] = (skill_info['proficiency'], skill_info['confidence'])
                 
-                print(f"   ✅ LLM extracted {len(resume_skill_data)} skills")
-                used_llm = True  # Mark that LLM was used
+                if resume_skill_data:
+                    print(f"   ✅ LLM extracted {len(resume_skill_data)} skills")
+                    used_llm = True  # Mark that LLM was used
+                else:
+                    print("   ⚠️ LLM returned 0 skills (likely error), falling back to NLP...")
+                    used_llm = False
             else:
                 print("📝 Using NLP-based skill extraction (no LLM API key)...")
                 resume_skills = skill_extractor.extract_skills_from_resume(resume_text)
@@ -224,7 +231,8 @@ def extract_user_skills(user_id: int):
                     'skills': course_skill_data
                 })
         
-            # 3. Extract from Projects (including newly extracted ones)
+        # 3. Extract from Projects (including newly extracted ones)
+        if not used_llm:
             cursor.execute("SELECT * FROM projects WHERE user_id = ?", (user_id,))
             projects = cursor.fetchall()
         
@@ -236,11 +244,18 @@ def extract_user_skills(user_id: int):
             text = f"{project_dict.get('project_name', '')} {project_dict.get('description', '')}"
             
             # Also include tech stack
+            # Also include tech stack
             tech_stack = project_dict.get('tech_stack')
             if tech_stack:
                 if isinstance(tech_stack, str):
-                    tech_stack = json.loads(tech_stack)
-                text += " " + " ".join(tech_stack)
+                    try:
+                        tech_stack = json.loads(tech_stack)
+                    except json.JSONDecodeError:
+                        # Fallback for non-JSON strings
+                        tech_stack = [s.strip() for s in tech_stack.split(',') if s.strip()]
+                
+                if isinstance(tech_stack, list):
+                    text += " " + " ".join(tech_stack)
             
             project_skills = skill_extractor.extract_skills_from_text(text)
             print(f"   Project '{project_dict.get('project_name', '')[:30]}...': {len(project_skills)} skills")
@@ -263,7 +278,8 @@ def extract_user_skills(user_id: int):
                     'skills': project_skill_data
                 })
         
-            # 4. Extract from Work Experience
+        # 4. Extract from Work Experience
+        if not used_llm:
             cursor.execute("SELECT * FROM work_experience WHERE user_id = ?", (user_id,))
             experiences = cursor.fetchall()
         
@@ -273,11 +289,18 @@ def extract_user_skills(user_id: int):
             text = f"{exp_dict.get('job_title', '')} {exp_dict.get('description', '')}"
             
             # Include technologies
+            # Include technologies
             tech_used = exp_dict.get('technologies_used')
             if tech_used:
                 if isinstance(tech_used, str):
-                    tech_used = json.loads(tech_used)
-                text += " " + " ".join(tech_used)
+                    try:
+                        tech_used = json.loads(tech_used)
+                    except json.JSONDecodeError:
+                        # Fallback for non-JSON strings
+                        tech_used = [s.strip() for s in tech_used.split(',') if s.strip()]
+                
+                if isinstance(tech_used, list):
+                    text += " " + " ".join(tech_used)
             
             exp_skills = skill_extractor.extract_skills_from_text(text)
             print(f"   Experience '{exp_dict.get('job_title', '')[:30]}...': {len(exp_skills)} skills")

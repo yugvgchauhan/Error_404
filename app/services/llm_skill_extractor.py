@@ -5,7 +5,7 @@ import re
 from typing import List, Dict, Optional
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -29,27 +29,27 @@ class LLMSkillExtractor:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize with Gemini API key."""
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
-        self.model = None
+        self.client = None
+        self.model_name = 'gemini-2.0-flash'
         
         if not self.api_key:
             print("⚠️ Warning: No GEMINI_API_KEY found. LLM extraction will not work.")
             return
             
         if not GEMINI_AVAILABLE:
-            print("⚠️ Warning: google-generativeai not installed. Run: pip install google-generativeai")
+            print("⚠️ Warning: google-genai not installed. Run: pip install google-genai")
             return
         
         try:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.0-flash')
-            print("✅ Gemini LLM initialized successfully")
+            self.client = genai.Client(api_key=self.api_key)
+            print("✅ Gemini LLM (New SDK) initialized successfully")
         except Exception as e:
             print(f"❌ Failed to initialize Gemini: {e}")
-            self.model = None
+            self.client = None
     
     def is_available(self) -> bool:
         """Check if LLM extraction is available."""
-        return self.model is not None
+        return self.client is not None
     
     def extract_text_from_file(self, file_path: str) -> str:
         """Extract text from PDF, DOCX, or TXT file."""
@@ -85,8 +85,8 @@ class LLMSkillExtractor:
         Use Gemini to extract skills from resume text.
         Returns a list of skill names.
         """
-        if not self.model:
-            print("❌ LLM model not available")
+        if not self.client:
+            print("❌ LLM client not available")
             return []
         
         if not resume_text or len(resume_text.strip()) < 50:
@@ -118,7 +118,10 @@ JSON array of skills:"""
 
         try:
             print("🤖 Calling Gemini API for skill extraction...")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             response_text = response.text.strip()
             
             # Clean up response - extract JSON array
@@ -156,7 +159,7 @@ JSON array of skills:"""
         Extract skills with estimated proficiency levels.
         Returns list of {skill_name, proficiency, confidence}.
         """
-        if not self.model:
+        if not self.client:
             return []
         
         if not resume_text or len(resume_text.strip()) < 50:
@@ -187,7 +190,10 @@ JSON array:"""
 
         try:
             print("🤖 Calling Gemini API for detailed skill extraction...")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             response_text = response.text.strip()
             
             # Extract JSON array
@@ -229,3 +235,78 @@ JSON array:"""
         except Exception as e:
             print(f"❌ Gemini API error: {e}")
             return []
+
+    def generate_market_requirements(self, role: str, location: str = "Global") -> Dict[str, Dict]:
+        """
+        Generate realistic market skill requirements for a specific role and location.
+        Returns a dict of {skill_name: {frequency, requirement_level, avg_proficiency_needed}}.
+        """
+        if not self.client:
+            return {}
+            
+        prompt = f"""You are a top-tier tech recruiter and market analyst. Analyze the current job market trends (2024-2025) for the following role:
+Role: {role}
+Location: {location}
+
+Tasks:
+1. Identify the top 8-12 most critical and high-demand technical skills, tools, and methodologies for this role.
+2. For each skill, determine:
+   - frequency: 0.0 to 1.0 (how often it appears in job postings)
+   - requirement_level: 'critical', 'important', or 'emerging'
+   - avg_proficiency_needed: 0.0 to 1.0 (what proficiency level a competitive candidate should have)
+
+IMPORTANT: Focus on the latest technologies and industry standards.
+
+Return ONLY a JSON object where keys are skill names (lowercase-hyphenated) and values are objects with frequency, requirement_level, and avg_proficiency_needed.
+
+Example format:
+{{
+  "python": {{"frequency": 0.9, "requirement_level": "critical", "avg_proficiency_needed": 0.85}},
+  "react": {{"frequency": 0.8, "requirement_level": "important", "avg_proficiency_needed": 0.7}}
+}}
+
+JSON object:"""
+
+        try:
+            print(f"🤖 Calling Gemini to generate market requirements for: {role}...")
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
+            response_text = response.text.strip()
+            
+            # Extract JSON object
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                requirements_json = json_match.group(0)
+                requirements = json.loads(requirements_json)
+                
+                # Validate and clean
+                cleaned_requirements = {}
+                for skill, data in requirements.items():
+                    if isinstance(data, dict):
+                        skill_name = skill.strip().lower()
+                        skill_name = re.sub(r'\s+', '-', skill_name)
+                        
+                        # Use default values if missing
+                        freq = float(data.get('frequency', 0.5))
+                        req_level = data.get('requirement_level', 'important')
+                        if req_level not in ['critical', 'important', 'emerging']:
+                            req_level = 'important'
+                        prof_needed = float(data.get('avg_proficiency_needed', 0.5))
+                        
+                        cleaned_requirements[skill_name] = {
+                            'frequency': max(0.1, min(1.0, freq)),
+                            'requirement_level': req_level,
+                            'avg_proficiency_needed': max(0.1, min(1.0, prof_needed))
+                        }
+                
+                print(f"✅ Generated requirements for {len(cleaned_requirements)} skills")
+                return cleaned_requirements
+            else:
+                print(f"❌ Could not parse JSON for market requirements")
+                return {}
+                
+        except Exception as e:
+            print(f"❌ Gemini API error generating market requirements: {e}")
+            return {}

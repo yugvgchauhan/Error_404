@@ -118,12 +118,59 @@ def get_services() -> ServiceContainer:
     return ServiceContainer()
 
 
-def get_sample_market_requirements() -> dict:
+def get_sample_market_requirements(role: str = "Healthcare Data Analyst") -> dict:
     """Return sample market requirements when API is unavailable.
     
     This is used as a fallback when LinkedIn API is not configured.
-    In production, this should be replaced with cached real market data.
+    It returns tailored data based on the requested role to simulate real analysis.
     """
+    role_lower = role.lower()
+    
+    # AI/ML Engineer (User's specific request)
+    if "ai" in role_lower or "ml" in role_lower or "machine learning" in role_lower:
+        return {
+            "python": {"frequency": 0.95, "requirement_level": "critical", "avg_proficiency_needed": 0.85},
+            "tensorflow": {"frequency": 0.75, "requirement_level": "important", "avg_proficiency_needed": 0.70},
+            "pytorch": {"frequency": 0.80, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+            "sql": {"frequency": 0.60, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+            "docker": {"frequency": 0.70, "requirement_level": "important", "avg_proficiency_needed": 0.60},
+            "kubernetes": {"frequency": 0.55, "requirement_level": "advanced", "avg_proficiency_needed": 0.60},
+            "aws": {"frequency": 0.65, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+            "transformers": {"frequency": 0.50, "requirement_level": "emerging", "avg_proficiency_needed": 0.70},
+            "scikit-learn": {"frequency": 0.85, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+            "nlp": {"frequency": 0.60, "requirement_level": "important", "avg_proficiency_needed": 0.70},
+            "generative-ai": {"frequency": 0.45, "requirement_level": "emerging", "avg_proficiency_needed": 0.65},
+            "langchain": {"frequency": 0.40, "requirement_level": "emerging", "avg_proficiency_needed": 0.60},
+        }
+
+    # Data Scientist
+    if "data scientist" in role_lower or "data science" in role_lower:
+        return {
+            "python": {"frequency": 0.95, "requirement_level": "critical", "avg_proficiency_needed": 0.80},
+            "sql": {"frequency": 0.90, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+            "machine-learning": {"frequency": 0.85, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+            "statistics": {"frequency": 0.80, "requirement_level": "critical", "avg_proficiency_needed": 0.70},
+            "pandas": {"frequency": 0.90, "requirement_level": "critical", "avg_proficiency_needed": 0.80},
+            "tableau": {"frequency": 0.60, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+            "power-bi": {"frequency": 0.50, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+            "big-data": {"frequency": 0.40, "requirement_level": "advanced", "avg_proficiency_needed": 0.60},
+        }
+
+    # Full Stack / Web Developer
+    if "full stack" in role_lower or "web" in role_lower or "developer" in role_lower:
+        return {
+            "javascript": {"frequency": 0.95, "requirement_level": "critical", "avg_proficiency_needed": 0.80},
+            "react": {"frequency": 0.80, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
+            "node.js": {"frequency": 0.70, "requirement_level": "important", "avg_proficiency_needed": 0.70},
+            "typescript": {"frequency": 0.75, "requirement_level": "important", "avg_proficiency_needed": 0.70},
+            "html": {"frequency": 0.90, "requirement_level": "critical", "avg_proficiency_needed": 0.85},
+            "css": {"frequency": 0.90, "requirement_level": "critical", "avg_proficiency_needed": 0.80},
+            "git": {"frequency": 0.85, "requirement_level": "critical", "avg_proficiency_needed": 0.70},
+            "docker": {"frequency": 0.50, "requirement_level": "advanced", "avg_proficiency_needed": 0.60},
+            "sql": {"frequency": 0.60, "requirement_level": "important", "avg_proficiency_needed": 0.65},
+        }
+
+    # Default / Healthcare Data Analyst
     return {
         "python": {"frequency": 0.85, "requirement_level": "critical", "avg_proficiency_needed": 0.75},
         "sql": {"frequency": 0.80, "requirement_level": "critical", "avg_proficiency_needed": 0.70},

@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Best Deeplearning.AI Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=deeplearning.ai",
+    "description": "Some of the best Deeplearning.AI courses online include the DeepLearning.AI TensorFlow Developer Professional Certificate and the TensorFlow 2 for Deep Learning Specialization. These programs offer co...",
+    "skill_targeted": "DL",
+    "rating": 4.8,
+    "duration": "4 Weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6320719
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOor4swm0xTcI-AyAC98dxDKMM3WS3Fmi0ob5CztLhlqPe0OiWr1O",
+    "description": "Instructor:TIA Education, Andrew Ramdayal\n\n   Bestseller  \n   Rating: 4.7 out of 5 4.7 \n   163,014 ratings \n\nCurrent price$129.99\n\nImage 39\n\n### Complete Data Science,Machine Learning,DL,NLP Bootcamp\n...",
+    "skill_targeted": "DL",
+    "rating": 4.7,
+    "duration": "8 weeks",
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.53225553
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOopXAvQL2xM7jQcU1QdNx32Kp_Ujvztj-ywHktbShBf2j0EyrEcw",
+    "description": "Instructor:TIA Education, Andrew Ramdayal\n\n   Bestseller  \n   Rating: 4.7 out of 5 4.7 \n   163,014 ratings \n\nCurrent price$129.99\n\nImage 39\n\n### Complete Data Science,Machine Learning,DL,NLP Bootcamp\n...",
+    "skill_targeted": "DL",
+    "rating": 4.7,
+    "duration": "8 weeks",
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.53225553
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOoq3xg38kcNDQQQtkLaIsARzNrSg8R2rEhPk08IoQp9B1M4xYMLM",
+    "description": "Instructor:TIA Education, Andrew Ramdayal\n\n   Bestseller  \n   Rating: 4.7 out of 5 4.7 \n   163,014 ratings \n\nCurrent price$129.99\n\nImage 39\n\n### Complete Data Science,Machine Learning,DL,NLP Bootcamp\n...",
+    "skill_targeted": "DL",
+    "rating": 4.7,
+    "duration": "8 weeks",
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.53225553
+  },
+  {
+    "course_name": "Coursera | Degrees, Certificates, & Free Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/",
+    "description": "Coursera\u2019s best-known courses and certificates are offered by leading universities and companies in the fields of AI, data science, cybersecurity, and software engineering. Many learners begin with th...",
+    "skill_targeted": "DL",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.47066417
+  }
+]

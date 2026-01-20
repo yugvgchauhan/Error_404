@@ -32,6 +32,14 @@ def analyze_user_gaps(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
+        user_dict = dict(user)
+        
+        # Use user's target role if job_title is default or not provided
+        if job_title == "Healthcare Data Analyst" and (user_dict.get('target_role') or user_dict.get('target_job')):
+            target_role = user_dict.get('target_role') or user_dict.get('target_job')
+        else:
+            target_role = job_title
+
         # Get user skills
         cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
         user_skills_rows = cursor.fetchall()
@@ -52,16 +60,21 @@ def analyze_user_gaps(
             }
         
         # Get market requirements (from cache or API)
+        market_requirements = {}
         if services.has_linkedin_api():
-            linkedin_fetcher = services.linkedin_fetcher
-            job_analyzer = services.job_analyzer
-            
-            jobs_data = linkedin_fetcher.fetch_jobs(job_title, location, limit=50)
-            jobs = linkedin_fetcher.get_job_details(jobs_data)
-            market_requirements = job_analyzer.aggregate_job_requirements(jobs)
-        else:
-            # Use sample market data if API not available
-            market_requirements = get_sample_market_requirements()
+            try:
+                linkedin_fetcher = services.linkedin_fetcher
+                job_analyzer = services.job_analyzer
+                
+                jobs_data = linkedin_fetcher.fetch_jobs(target_role, location, limit=50)
+                jobs = linkedin_fetcher.get_job_details(jobs_data)
+                market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+            except Exception as e:
+                print(f"Gap analysis API error: {e}")
+        
+        if not market_requirements:
+            # Use sample market data if API not available or failed
+            market_requirements = get_sample_market_requirements(target_role)
         
         # Perform gap analysis
         gap_analyzer = services.gap_analyzer
@@ -70,7 +83,7 @@ def analyze_user_gaps(
         return {
             "message": "Gap analysis complete",
             "user_id": user_id,
-            "target_role": job_title,
+            "target_role": target_role,
             "user_skills_count": len(user_skills),
             "market_skills_count": len(market_requirements),
             "overall_readiness": gap_result['overall_readiness'],
@@ -104,6 +117,10 @@ def get_recommended_courses(
         
         user_dict = dict(user)
         
+        # Use user's target role
+        target_role = user_dict.get('target_role') or user_dict.get('target_job') or "Healthcare Data Analyst"
+        location = user_dict.get('location', 'United States')
+
         # Get user skills
         cursor.execute("SELECT * FROM user_skills WHERE user_id = ?", (user_id,))
         user_skills_rows = cursor.fetchall()
@@ -117,19 +134,21 @@ def get_recommended_courses(
             }
         
         # Get market requirements (from cache or API)
+        # Get market requirements (from cache or API)
+        market_requirements = {}
         if services.has_linkedin_api():
-            linkedin_fetcher = services.linkedin_fetcher
-            job_analyzer = services.job_analyzer
-            
-            # Use user's target role and location
-            target_role = user_dict.get('target_role', 'Healthcare Data Analyst')
-            location = user_dict.get('location', 'United States')
-            
-            jobs_data = linkedin_fetcher.fetch_jobs(target_role, location, limit=30)
-            jobs = linkedin_fetcher.get_job_details(jobs_data)
-            market_requirements = job_analyzer.aggregate_job_requirements(jobs)
-        else:
-            market_requirements = get_sample_market_requirements()
+            try:
+                linkedin_fetcher = services.linkedin_fetcher
+                job_analyzer = services.job_analyzer
+                
+                jobs_data = linkedin_fetcher.fetch_jobs(target_role, location, limit=30)
+                jobs = linkedin_fetcher.get_job_details(jobs_data)
+                market_requirements = job_analyzer.aggregate_job_requirements(jobs)
+            except Exception as e:
+                print(f"Recommendations API error: {e}")
+        
+        if not market_requirements:
+            market_requirements = get_sample_market_requirements(target_role)
         
         # Perform gap analysis
         gap_analyzer = services.gap_analyzer
@@ -207,7 +226,13 @@ def analyze_user_github(user_id: int, github_url: Optional[str] = None):
             )
         
         # Analyze GitHub profile
-        result = github_analyzer.analyze_github_profile(url, max_repos=10, fetch_readmes=True)
+        llm_extractor = services.llm_skill_extractor if services.has_llm_api() else None
+        result = github_analyzer.analyze_github_profile(
+            url, 
+            max_repos=10, 
+            fetch_readmes=True,
+            llm_extractor=llm_extractor
+        )
         
         if 'error' in result:
             raise HTTPException(status_code=400, detail=result['error'])
@@ -217,17 +242,28 @@ def analyze_user_github(user_id: int, github_url: Optional[str] = None):
         for skill, (proficiency, confidence) in result['skills_found'].items():
             # Check if skill already exists
             cursor.execute(
-                "SELECT id, proficiency FROM user_skills WHERE user_id = ? AND skill_name = ?",
+                "SELECT id, proficiency, sources FROM user_skills WHERE user_id = ? AND skill_name = ?",
                 (user_id, skill)
             )
             existing = cursor.fetchone()
             
             if existing:
+                existing_dict = dict(existing)
+                try:
+                    sources = json.loads(existing_dict['sources']) if existing_dict.get('sources') else []
+                    if not isinstance(sources, list):
+                        sources = [str(sources)]
+                except (json.JSONDecodeError, TypeError):
+                    sources = ['manual']
+                
+                if 'github' not in sources:
+                    sources.append('github')
+                
                 # Update if GitHub shows higher proficiency
-                if proficiency > existing['proficiency']:
+                if proficiency > existing_dict['proficiency']:
                     cursor.execute(
-                        "UPDATE user_skills SET proficiency = ?, confidence = ?, sources = ? WHERE id = ?",
-                        (proficiency, confidence, json.dumps(['github']), existing['id'])
+                        "UPDATE user_skills SET proficiency = ?, confidence = ?, sources = ?, source_count = ? WHERE id = ?",
+                        (proficiency, confidence, json.dumps(sources), len(sources), existing_dict['id'])
                     )
                     skills_saved += 1
             else:
@@ -249,6 +285,119 @@ def analyze_user_github(user_id: int, github_url: Optional[str] = None):
             "skills_saved": skills_saved,
             "skills": result['skills_found'],
             "repo_details": result['repo_details']
+        }
+
+
+# ===== LINKEDIN ANALYSIS ENDPOINTS =====
+@router.post("/users/{user_id}/analyze-linkedin")
+def analyze_user_linkedin(user_id: int, linkedin_url: Optional[str] = None):
+    """
+    Analyze user's LinkedIn profile to extract skills.
+    Note: Real LinkedIn scraping requires specialized APIs or tokens.
+    This implementation uses a combination of profile data and LLM-based estimation.
+    """
+    services = get_services()
+    llm_extractor = services.llm_skill_extractor
+    
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Get user
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_dict = dict(user_row)
+        url = linkedin_url or user_dict.get('linkedin_url')
+        
+        if not url:
+            raise HTTPException(
+                status_code=400, 
+                detail="No LinkedIn URL provided."
+            )
+        
+        skills_to_save = {}
+        
+        if services.has_llm_api():
+            try:
+                # Simulated extraction using LLM based on user's professional profile
+                context = f"User: {user_dict.get('name')}, Role: {user_dict.get('target_role')}, Education: {user_dict.get('education')}"
+                simulated_text = f"Professional Profile: {context}. LinkedIn Portfolio: {url}. Based on this URL and the user's role, extract the core technical and professional skills expected on their LinkedIn profile."
+                extracted = llm_extractor.extract_skills_with_proficiency(simulated_text)
+                for item in extracted:
+                    skills_to_save[item['skill_name']] = (item['proficiency'], item['confidence'])
+            except:
+                pass
+                
+        # Fallback to defaults if LLM fails or not available
+        if not skills_to_save:
+            role = user_dict.get('target_role', 'Healthcare Data Analyst').lower()
+            if 'data' in role or 'analyst' in role:
+                skills_to_save = {
+                    "data-analysis": (0.8, 0.8),
+                    "sql": (0.75, 0.8),
+                    "python": (0.7, 0.75),
+                    "tableau": (0.65, 0.7),
+                    "business-intelligence": (0.7, 0.7)
+                }
+            elif 'health' in role:
+                skills_to_save = {
+                    "healthcare-administration": (0.8, 0.85),
+                    "patient-care": (0.7, 0.7),
+                    "clinical-data": (0.75, 0.8),
+                    "compliance": (0.8, 0.8)
+                }
+            else:
+                skills_to_save = {
+                    "project-management": (0.75, 0.8),
+                    "communication": (0.85, 0.9),
+                    "team-leadership": (0.7, 0.7)
+                }
+        
+        # Save skills to database
+        skills_saved = 0
+        for skill, (proficiency, confidence) in skills_to_save.items():
+            cursor.execute(
+                "SELECT id, proficiency FROM user_skills WHERE user_id = ? AND skill_name = ?",
+                (user_id, skill)
+            )
+            existing = cursor.fetchone()
+            
+            if existing:
+                existing_dict = dict(existing)
+                try:
+                    sources = json.loads(existing_dict['sources']) if existing_dict.get('sources') else []
+                    if not isinstance(sources, list):
+                        sources = [str(sources)]
+                except (json.JSONDecodeError, TypeError):
+                    sources = ['manual']
+                
+                if 'linkedin' not in sources:
+                    sources.append('linkedin')
+                
+                if proficiency > existing_dict['proficiency']:
+                    cursor.execute(
+                        "UPDATE user_skills SET proficiency = ?, confidence = ?, sources = ?, source_count = ? WHERE id = ?",
+                        (proficiency, confidence, json.dumps(sources), len(sources), existing_dict['id'])
+                    )
+                    skills_saved += 1
+            else:
+                cursor.execute('''
+                    INSERT INTO user_skills (user_id, skill_name, proficiency, confidence, source_count, sources)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (user_id, skill, proficiency, confidence, 1, json.dumps(['linkedin'])))
+                skills_saved += 1
+        
+        conn.commit()
+        
+        return {
+            "message": "LinkedIn analysis complete (simulated)",
+            "user_id": user_id,
+            "linkedin_url": url,
+            "skills_found": len(skills_to_save),
+            "skills_saved": skills_saved,
+            "skills": skills_to_save
         }
 
 
@@ -301,7 +450,12 @@ def run_complete_analysis(
         
         if github_url:
             try:
-                github_result = github_analyzer.analyze_github_profile(github_url, max_repos=5)
+                llm_extractor = services.llm_skill_extractor if services.has_llm_api() else None
+                github_result = github_analyzer.analyze_github_profile(
+                    github_url, 
+                    max_repos=5, 
+                    llm_extractor=llm_extractor
+                )
                 results['stages']['github_analysis'] = {
                     "status": "success",
                     "repos_analyzed": github_result.get('repos_analyzed', 0),
@@ -312,8 +466,26 @@ def run_complete_analysis(
         else:
             results['stages']['github_analysis'] = {"status": "skipped", "reason": "No GitHub URL"}
         
+        # Stage 2.5: Analyze LinkedIn (if URL available)
+        print("🔗 Stage 2.5: Analyzing LinkedIn...")
+        linkedin_url = user_dict.get('linkedin_url')
+        if linkedin_url:
+            try:
+                # Use the existing LinkedIn analysis logic
+                linkedin_result = analyze_user_linkedin(user_id, linkedin_url)
+                results['stages']['linkedin_analysis'] = {
+                    "status": "success",
+                    "skills_found": linkedin_result.get('skills_found', 0)
+                }
+            except Exception as e:
+                results['stages']['linkedin_analysis'] = {"status": "failed", "error": str(e)}
+        else:
+            results['stages']['linkedin_analysis'] = {"status": "skipped", "reason": "No LinkedIn URL"}
+        
         # Stage 3: Get market requirements
         print("📊 Stage 3: Analyzing job market...")
+        market_requirements = None
+        
         if services.has_linkedin_api():
             linkedin_fetcher = services.linkedin_fetcher
             job_analyzer = services.job_analyzer
@@ -324,15 +496,38 @@ def run_complete_analysis(
                 market_requirements = job_analyzer.aggregate_job_requirements(jobs)
                 results['stages']['market_analysis'] = {
                     "status": "success",
+                    "source": "linkedin_api",
                     "jobs_analyzed": len(jobs),
                     "skills_identified": len(market_requirements)
                 }
             except Exception as e:
-                market_requirements = get_sample_market_requirements()
-                results['stages']['market_analysis'] = {"status": "fallback", "error": str(e)}
-        else:
-            market_requirements = get_sample_market_requirements()
-            results['stages']['market_analysis'] = {"status": "fallback", "reason": "API not configured"}
+                print(f"   ⚠️ Market analysis error: {e}")
+                pass
+        
+        # Use LLM for dynamic market requirements if API failed or not available
+        if not market_requirements and services.has_llm_api():
+            try:
+                print(f"   🤖 Generating dynamic market requirements for {target_job}...")
+                market_requirements = services.llm_skill_extractor.generate_market_requirements(target_job, location)
+                if market_requirements:
+                    results['stages']['market_analysis'] = {
+                        "status": "success",
+                        "source": "llm_generated",
+                        "skills_identified": len(market_requirements)
+                    }
+            except Exception as e:
+                print(f"   ⚠️ LLM market generation failed: {e}")
+                pass
+        
+        # Final fallback to sample data
+        if not market_requirements:
+            print(f"   ⚠️ Using fallback sample market requirements for {target_job}")
+            market_requirements = get_sample_market_requirements(target_job)
+            results['stages']['market_analysis'] = {
+                "status": "fallback",
+                "source": "sample_data",
+                "reason": "API and LLM failed or not available"
+            }
         
         # Stage 4: Gap analysis
         print("🔍 Stage 4: Performing gap analysis...")

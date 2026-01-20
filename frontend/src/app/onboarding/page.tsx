@@ -13,6 +13,8 @@ import {
     Sparkles,
     Upload,
     FileText,
+    Github,
+    Linkedin,
 } from 'lucide-react';
 
 export default function OnboardingPage() {
@@ -26,6 +28,8 @@ export default function OnboardingPage() {
         university: '',
         target_role: '',
         location: '',
+        github_url: '',
+        linkedin_url: '',
     });
 
     const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -37,18 +41,26 @@ export default function OnboardingPage() {
                 university: user.university || '',
                 target_role: user.target_role || '',
                 location: user.location || '',
+                github_url: user.github_url || '',
+                linkedin_url: user.linkedin_url || '',
             });
         }
     }, [user]);
 
     const handleNext = async () => {
-        if (step < 3) {
-            // Save profile data on step 1
-            if (step === 1 && userId) {
+        if (step < 4) {
+            // Save profile data on step 1 & 2 & 4
+            if ((step === 1 || step === 2 || step === 4) && userId) {
                 setLoading(true);
                 try {
                     await api.updateUser(userId, formData);
                     await refreshUser();
+                    if (step === 4) {
+                        // If we just finished step 4, we also need to trigger the final analysis
+                        await api.analysis.completeAnalysis(userId, formData.target_role, formData.location);
+                        router.push('/dashboard');
+                        return;
+                    }
                 } catch (error) {
                     console.error('Failed to update profile:', error);
                 } finally {
@@ -57,21 +69,21 @@ export default function OnboardingPage() {
             }
             setStep(step + 1);
         } else {
-            // Final step - upload resume and extract skills
-            setLoading(true);
-            try {
-                if (resumeFile && userId) {
-                    await api.uploadResume(userId, resumeFile);
-                    await api.extractSkills(userId);
-                }
-                await refreshUser();
-                router.push('/dashboard');
-            } catch (error) {
-                console.error('Failed to complete onboarding:', error);
-                router.push('/dashboard');
-            } finally {
-                setLoading(false);
-            }
+            // Final step - already handled in step 4 block above or fallback
+            router.push('/dashboard');
+        }
+    };
+
+    const handleStep3Complete = async () => {
+        if (!resumeFile || !userId) return;
+        setLoading(true);
+        try {
+            await api.uploadResume(userId, resumeFile);
+            setStep(4);
+        } catch (error) {
+            console.error('Failed to upload resume:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -103,13 +115,13 @@ export default function OnboardingPage() {
 
                 {/* Progress Steps */}
                 <div className="flex items-center justify-center gap-2 mb-8">
-                    {[1, 2, 3].map((s) => (
-                        <div key={s} className={`flex items-center ${s < 3 ? 'flex-1' : ''}`}>
+                    {[1, 2, 3, 4].map((s) => (
+                        <div key={s} className={`flex items-center ${s < 4 ? 'flex-1' : ''}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${s < step ? 'bg-green-500 text-white' : s === step ? 'bg-green-500/20 border-2 border-green-500 text-green-400' : 'bg-gray-700 text-gray-500'
                                 }`}>
                                 {s < step ? <CheckCircle size={20} /> : s}
                             </div>
-                            {s < 3 && <div className={`flex-1 h-1 mx-2 rounded ${s < step ? 'bg-green-500' : 'bg-gray-700'}`} />}
+                            {s < 4 && <div className={`flex-1 h-1 mx-2 rounded ${s < step ? 'bg-green-500' : 'bg-gray-700'}`} />}
                         </div>
                     ))}
                 </div>
@@ -119,11 +131,13 @@ export default function OnboardingPage() {
                         {step === 1 && 'Complete Your Profile'}
                         {step === 2 && 'Set Your Goals'}
                         {step === 3 && 'Upload Your Resume'}
+                        {step === 4 && 'Connect Your Profiles'}
                     </h1>
                     <p className="text-gray-400 text-center mb-8">
                         {step === 1 && 'Tell us about your background'}
                         {step === 2 && 'What role are you targeting?'}
                         {step === 3 && 'We\'ll analyze it to extract your skills'}
+                        {step === 4 && 'Add GitHub and LinkedIn for deep analysis'}
                     </p>
 
                     {step === 1 && (
@@ -230,14 +244,64 @@ export default function OnboardingPage() {
                         </div>
                     )}
 
+                    {step === 4 && (
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">GitHub URL (Optional)</label>
+                                <div className="relative">
+                                    <Github className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+                                    <input
+                                        type="url"
+                                        value={formData.github_url}
+                                        onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                                        placeholder="https://github.com/username"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">LinkedIn URL (Optional)</label>
+                                <div className="relative">
+                                    <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+                                    <input
+                                        type="url"
+                                        value={formData.linkedin_url}
+                                        onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                                        placeholder="https://linkedin.com/in/username"
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                                <p className="text-xs text-green-400 leading-relaxed text-center">
+                                    Connecting your profiles allows us to perform a deep analysis of your projects, open-source contributions, and professional endorsements.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex gap-4 mt-8">
                         {step > 1 && (
                             <button type="button" onClick={handleBack} className="flex-1 py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600 flex items-center justify-center gap-2">
                                 <ChevronLeft size={20} /> Back
                             </button>
                         )}
-                        <button type="button" onClick={handleNext} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
-                            {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : step === 3 ? 'Complete Setup' : <><span>Continue</span><ChevronRight size={20} /></>}
+                        <button
+                            type="button"
+                            onClick={step === 3 ? handleStep3Complete : handleNext}
+                            disabled={loading}
+                            className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : step === 4 ? (
+                                'Analyze My Profile'
+                            ) : (
+                                <>
+                                    <span>Continue</span>
+                                    <ChevronRight size={20} />
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

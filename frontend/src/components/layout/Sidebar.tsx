@@ -13,6 +13,7 @@ import {
     X,
     Briefcase,
     Sparkles,
+    Map,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -20,6 +21,7 @@ const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/profile', label: 'Profile', icon: User },
     { href: '/skills', label: 'Skills', icon: BarChart3 },
+    { href: '/roadmap', label: 'Roadmap', icon: Map },
     { href: '/recommendations', label: 'Courses', icon: BookOpen },
 ];
 

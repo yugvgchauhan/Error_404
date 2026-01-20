@@ -44,9 +44,25 @@ def register_user(user: schemas.UserCreate):
         return dict(row)
 
 
+@router.get("/email/{email}", response_model=schemas.UserResponse)
+def get_user_by_email(email: str):
+    """Get user by email (used for login)."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        row = cursor.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user = dict(row)
+        user['has_resume'] = bool(user.get('resume_path'))
+        return user
+
+
 @router.get("/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: int):
-    """Get user by ID."""
+    """Get user by ID with completion stats."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
@@ -57,6 +73,43 @@ def get_user(user_id: int):
         
         user = dict(row)
         user['has_resume'] = bool(user.get('resume_path'))
+        
+        # Get stats for completion calculation
+        cursor.execute("SELECT COUNT(*) as count FROM user_skills WHERE user_id = ?", (user_id,))
+        total_skills = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE user_id = ?", (user_id,))
+        total_projects = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(*) as count FROM courses WHERE user_id = ?", (user_id,))
+        total_courses = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(*) as count FROM certifications WHERE user_id = ?", (user_id,))
+        total_certifications = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(*) as count FROM work_experience WHERE user_id = ?", (user_id,))
+        total_work_experience = cursor.fetchone()['count']
+        
+        # Calculate profile completion
+        completion_fields = [
+            bool(user.get('name')),
+            bool(user.get('education')),
+            bool(user.get('university')),
+            bool(user.get('graduation_year')),
+            bool(user.get('location')),
+            bool(user.get('target_role')),
+            bool(user.get('phone')),
+            bool(user.get('linkedin_url')),
+            bool(user.get('github_url')),
+            bool(user.get('resume_path')),
+            total_skills > 0,
+            total_projects > 0,
+            total_courses > 0,
+            total_certifications > 0,
+            total_work_experience > 0
+        ]
+        
+        user['profile_completion'] = round((sum(completion_fields) / len(completion_fields)) * 100, 1)
+        user['total_skills'] = total_skills
+        user['total_projects'] = total_projects
+        user['total_courses'] = total_courses
+        
         return user
 
 
@@ -92,18 +145,29 @@ def get_user_profile(user_id: int):
         user = dict(user_row)
         user['has_resume'] = bool(user.get('resume_path'))
         
-        # Calculate profile completion
-        fields_filled = sum([
+        # Calculate profile completion with more granularity
+        completion_fields = [
             bool(user.get('name')),
-            bool(user.get('email')),
             bool(user.get('education')),
+            bool(user.get('university')),
+            bool(user.get('graduation_year')),
             bool(user.get('location')),
             bool(user.get('target_role')),
+            bool(user.get('phone')),
+            bool(user.get('linkedin_url')),
+            bool(user.get('github_url')),
             bool(user.get('resume_path')),
-            total_courses > 0,
+            total_skills > 0,
             total_projects > 0,
-        ])
-        profile_completion = round((fields_filled / 8) * 100, 1)
+            total_courses > 0,
+            total_certifications > 0,
+            total_work_experience > 0
+        ]
+        
+        fields_filled = sum(completion_fields)
+        # We have 15 fields now. Let's make it 0% if nothing but name is filled (name is required for register)
+        # Actually, let's just use the real count.
+        profile_completion = round((fields_filled / len(completion_fields)) * 100, 1)
         
         return {
             "user": user,

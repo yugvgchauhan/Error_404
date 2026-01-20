@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Best Healthcare Data Analytics Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=healthcare%20data%20analytics",
+    "description": "There are several online courses available that can help you learn healthcare data analytics. Notable options include the Healthcare Analytics Essentials course, which covers fundamental concepts, and...",
+    "skill_targeted": "Healthcare Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99983907
+  },
+  {
+    "course_name": "Health Informatics Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/browse/health/health-informatics",
+    "description": "If you are looking for top-notch advanced health informatics courses, look no further than Coursera. Their offerings include the Clinical Data Science Specialization, the Digital Health Specialization...",
+    "skill_targeted": "Healthcare Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99933845
+  },
+  {
+    "course_name": "Health Care Data Analyst: Career Guide and How to ...",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/articles/healthcare-data-analyst",
+    "description": "# Health Care Data Analyst: Career Guide and How to Become One\n\nWritten by Coursera Staff \u2022 Updated on\n\nData analytics and health care are industries in high demand, so it\u2019s no surprise that combining...",
+    "skill_targeted": "Healthcare Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99711037
+  },
+  {
+    "course_name": "Learn healthcare with online courses",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/healthcare",
+    "description": "Most popular programs\n\n CS50's Introduction to Computer ScienceHarvardX | Course\n Artificial Intelligence: Implications for Business StrategyMIT Sloan School of Management | Executive Education\n Suppl...",
+    "skill_targeted": "Healthcare Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.98582757
+  },
+  {
+    "course_name": "Analytics in Healthcare Management and Administration",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/analytics-in-healthcare-management-and-administration",
+    "description": "Learn at your own pace\n\n## Skills you'll gain\n\n Precision Medicine\n Health Care\n Analytics\n Systems Thinking\n Health Care Administration\n Performance Improvement\n Strategic Thinking\n Health Informatic...",
+    "skill_targeted": "Healthcare Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.98228765
+  }
+]

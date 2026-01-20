@@ -14,6 +14,21 @@ from app.routers import (
     roadmaps_router
 )
 
+from contextlib import asynccontextmanager
+
+# ===== LIFESPAN EVENT =====
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize database and services on startup."""
+    init_db()
+    # Trigger service initialization
+    from app.routers.dependencies import get_services
+    get_services()
+    print("FastAPI server started successfully!")
+    yield
+    # Shutdown logic if any
+    print("FastAPI server shutting down...")
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Healthcare Skill Intelligence API",
@@ -36,7 +51,8 @@ app = FastAPI(
     """,
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -47,17 +63,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# ===== STARTUP EVENT =====
-@app.on_event("startup")
-def startup_event():
-    """Initialize database and services on startup."""
-    init_db()
-    # Trigger service initialization
-    from app.routers.dependencies import get_services
-    get_services()
-    print("FastAPI server started successfully!")
 
 
 # ===== HEALTH & ROOT ENDPOINTS =====
@@ -109,4 +114,4 @@ if __name__ == "__main__":
     print("Starting Healthcare Skill Intelligence API...")
     print("API will be available at: http://localhost:8000")
     print("API Documentation: http://localhost:8000/docs")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,38 @@
+[
+  {
+    "course_name": "Best NLP Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=nlp",
+    "description": "There are several excellent online courses available for those interested in learning NLP. For a comprehensive understanding, consider the Mastering NLP: Tokenization, Sentiment Analysis & Neural MT S...",
+    "skill_targeted": "nlp",
+    "rating": 4.8,
+    "duration": "2 Hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.7539928
+  },
+  {
+    "course_name": "Best Online Natural Language Processing Courses & ...",
+    "platform": "edX",
+    "url": "https://www.edx.org/learn/natural-language-processing",
+    "description": "Most popular programs\n\n CS50's Introduction to Computer ScienceHarvardX | Course\n Artificial Intelligence: Implications for Business StrategyMIT Sloan School of Management | Executive Education\n Compu...",
+    "skill_targeted": "nlp",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6546525
+  },
+  {
+    "course_name": "Best Beginner NLP Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=nlp&productDifficultyLevel=Beginner",
+    "description": "## In summary, here are 10 of our most popular nlp courses\n\n Introduction to Artificial Intelligence (AI): IBM\n IBM Generative AI Engineering: IBM\n LangChain Chat with Your Data: DeepLearning.AI\n Natu...",
+    "skill_targeted": "nlp",
+    "rating": 4.7,
+    "duration": "4 Weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.6453216
+  }
+]

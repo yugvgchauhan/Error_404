@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Top Data Analysis Courses Online - Updated [January 2026]",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/topic/data-analysis/?srsltid=AfmBOortxd0mAQ9tVX7cGy6lFcX-eTmVS-Z32tM892tI0RU5WLmzUfki",
+    "description": "Begin a data analytics course on Udemy. We can teach you the skills you need, from analysis with SQL, Python, and R to visualizations with Tableau.",
+    "skill_targeted": "Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.9976586
+  },
+  {
+    "course_name": "Coursera | Degrees, Certificates, & Free Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/",
+    "description": "Coursera Plus is an annual subscription that gives learners unlimited access to thousands of courses, Specializations, and Professional Certificates. It\u2019s a substantial value for anyone planning to co...",
+    "skill_targeted": "Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.99740905
+  },
+  {
+    "course_name": "Best Data Analytics Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=data%20analytics",
+    "description": "### What are the best Data Analytics courses online?\u200e\n\nThere are numerous online courses available for those interested in data analytics. Some of the best options include the Google Data Analytics Pr...",
+    "skill_targeted": "Data Analyst",
+    "rating": null,
+    "duration": "4 Weeks",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.98998636
+  },
+  {
+    "course_name": "6 Popular Data Analytics Certifications: Your 2026 Guide",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/in/articles/data-analytics-certification",
+    "description": "### 1. Google Data Analytics Professional Certificate\n\nGoogle\u2019s Data Analytics Professional Certificate is a flexible online certificate programme that provides a comprehensive introduction to data an...",
+    "skill_targeted": "Data Analyst",
+    "rating": null,
+    "duration": "11 months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.98667485
+  },
+  {
+    "course_name": "IBM Data Analyst Professional Certificate",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/professional-certificates/ibm-data-analyst",
+    "description": "IBM Data Analyst Professional Certificate\n\nGain next-level skills with Coursera Plus for $199 (regularly $399). Save now.\n\n# IBM Data Analyst Professional Certificate\n\nPrepare for a career as a data a...",
+    "skill_targeted": "Data Analyst",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.979354
+  }
+]

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, Roadmap, RoadmapMilestone, UserRoadmapResponse } from '@/lib/api';
 import { MainLayout } from '@/components/layout/Sidebar';
 import {
     Map,
@@ -21,34 +21,6 @@ import {
     Target,
     Lock,
 } from 'lucide-react';
-
-interface Milestone {
-    id: string;
-    name: string;
-    description: string;
-    order: number;
-    estimatedWeeks: number;
-    prerequisites?: string[];
-    skills: string[];
-    courses: Array<{ name: string; platform: string; url: string }>;
-    progress: {
-        status: 'not_started' | 'in_progress' | 'completed';
-        started_at: string | null;
-        completed_at: string | null;
-    };
-    skillCompletion: number;
-    skillDetails: Array<{ name: string; hasSkill: boolean; proficiency: number }>;
-}
-
-interface Roadmap {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    estimatedDuration: string;
-    milestones: Milestone[];
-}
 
 interface RoadmapSummary {
     id: string;
@@ -85,8 +57,8 @@ export default function RoadmapPage() {
         if (!userId) return;
         setLoading(true);
         try {
-            const result = await api.getUserRoadmap(userId);
-            if (result.has_roadmap) {
+            const result: UserRoadmapResponse = await api.getUserRoadmap(userId);
+            if (result.has_roadmap && result.roadmap) {
                 setHasRoadmap(true);
                 setRoadmap(result.roadmap);
                 setOverallProgress(result.overall_progress);
@@ -95,14 +67,14 @@ export default function RoadmapPage() {
             } else {
                 setHasRoadmap(false);
                 // Load available roadmaps
-                const roadmapsResult = await api.getRoadmaps();
+                const roadmapsResult = await api.roadmap.getAvailable();
                 setAvailableRoadmaps(roadmapsResult.roadmaps || []);
             }
         } catch (error) {
             console.error('Failed to load roadmap:', error);
             // Load available roadmaps on error
             try {
-                const roadmapsResult = await api.getRoadmaps();
+                const roadmapsResult = await api.roadmap.getAvailable();
                 setAvailableRoadmaps(roadmapsResult.roadmaps || []);
             } catch (e) {
                 console.error('Failed to load available roadmaps:', e);
@@ -116,7 +88,7 @@ export default function RoadmapPage() {
         if (!userId) return;
         setLoading(true);
         try {
-            await api.selectRoadmap(userId, domain);
+            await api.roadmap.select(userId, domain);
             await loadUserRoadmap();
         } catch (error) {
             console.error('Failed to select roadmap:', error);
@@ -129,7 +101,7 @@ export default function RoadmapPage() {
         if (!userId) return;
         setUpdatingMilestone(milestoneId);
         try {
-            await api.updateMilestoneProgress(userId, milestoneId, status);
+            await api.roadmap.updateProgress(userId, milestoneId, status);
             await loadUserRoadmap();
         } catch (error) {
             console.error('Failed to update milestone:', error);
@@ -162,7 +134,7 @@ export default function RoadmapPage() {
         }
     };
 
-    const isLocked = (milestone: Milestone, milestones: Milestone[]) => {
+    const isMilestoneLocked = (milestone: RoadmapMilestone, milestones: RoadmapMilestone[]) => {
         if (!milestone.prerequisites || milestone.prerequisites.length === 0) return false;
         return milestone.prerequisites.some(prereqId => {
             const prereq = milestones.find(m => m.id === prereqId);
@@ -256,7 +228,7 @@ export default function RoadmapPage() {
                     <button
                         onClick={async () => {
                             if (userId) {
-                                await api.removeUserRoadmap(userId);
+                                await api.roadmap.remove(userId);
                                 setHasRoadmap(false);
                                 loadUserRoadmap();
                             }
@@ -301,7 +273,7 @@ export default function RoadmapPage() {
                 {/* Milestones */}
                 <div className="space-y-4">
                     {roadmap?.milestones.map((milestone, index) => {
-                        const locked = isLocked(milestone, roadmap.milestones);
+                        const locked = isMilestoneLocked(milestone, roadmap.milestones);
                         const isExpanded = expandedMilestone === milestone.id;
 
                         return (
@@ -359,16 +331,16 @@ export default function RoadmapPage() {
                                                 <div className="flex flex-wrap items-center gap-4 mt-3">
                                                     <span className="flex items-center gap-1 text-sm text-gray-500">
                                                         <Clock size={14} />
-                                                        {milestone.estimatedWeeks} weeks
+                                                        {milestone.estimated_weeks || milestone.estimatedWeeks} weeks
                                                     </span>
                                                     <span className="flex items-center gap-1 text-sm text-gray-500">
                                                         <Award size={14} />
                                                         {milestone.skills.length} skills
                                                     </span>
-                                                    {milestone.skillCompletion > 0 && (
+                                                    {milestone.skill_completion > 0 && (
                                                         <span className="flex items-center gap-1 text-sm text-green-600">
                                                             <Sparkles size={14} />
-                                                            {milestone.skillCompletion}% skills acquired
+                                                            {milestone.skill_completion}% skills acquired
                                                         </span>
                                                     )}
                                                 </div>
@@ -378,7 +350,7 @@ export default function RoadmapPage() {
                                                     <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                                         <div
                                                             className="h-full bg-blue-500 rounded-full"
-                                                            style={{ width: `${milestone.skillCompletion}%` }}
+                                                            style={{ width: `${milestone.skill_completion}%` }}
                                                         />
                                                     </div>
                                                 )}
@@ -395,17 +367,17 @@ export default function RoadmapPage() {
                                                     Skills You'll Learn
                                                 </h4>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {milestone.skillDetails.map((skill, i) => (
+                                                    {(milestone.skill_details || []).map((skill: any, i: number) => (
                                                         <span
                                                             key={i}
-                                                            className={`px-3 py-1.5 rounded-full text-sm font-medium ${skill.hasSkill
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-gray-100 text-gray-700'
+                                                            className={`px-3 py-1.5 rounded-full text-sm font-medium ${skill.has_skill
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-gray-100 text-gray-700'
                                                                 }`}
                                                         >
-                                                            {skill.hasSkill && <CheckCircle2 className="inline mr-1" size={12} />}
+                                                            {skill.has_skill && <CheckCircle2 className="inline mr-1" size={12} />}
                                                             {skill.name}
-                                                            {skill.hasSkill && ` (${skill.proficiency}%)`}
+                                                            {skill.has_skill && ` (${skill.proficiency}%)`}
                                                         </span>
                                                     ))}
                                                 </div>
@@ -429,7 +401,7 @@ export default function RoadmapPage() {
                                                                 <BookOpen className="text-gray-400" size={20} />
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className="font-medium text-gray-900 truncate">
-                                                                        {course.name}
+                                                                        {course.course_name || (course as any).name}
                                                                     </p>
                                                                     <p className="text-sm text-gray-500">
                                                                         {course.platform}

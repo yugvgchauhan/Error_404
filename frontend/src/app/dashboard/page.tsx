@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { api, Skill } from '@/lib/api';
+import { api, Skill, GapAnalysis } from '@/lib/api';
 import { MainLayout } from '@/components/layout/Sidebar';
 import {
     TrendingUp,
@@ -36,7 +36,7 @@ interface DashboardData {
     total_projects: number;
     total_courses: number;
     skills: Skill[];
-    gapAnalysis: any | null;
+    gapAnalysis: GapAnalysis | null;
 }
 
 const SKILL_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -105,7 +105,13 @@ export default function DashboardPage() {
         fullMark: 100,
     })) || [];
 
-    const matchPercentage = data?.gapAnalysis?.overall_readiness || 0;
+    const matchPercentage = data?.gapAnalysis?.overall_readiness ? data.gapAnalysis.overall_readiness * 100 : 0;
+
+    // Combine critical and important gaps for the "Skills to Learn" section
+    const displayGaps = [
+        ...(data?.gapAnalysis?.critical_gaps || []),
+        ...(data?.gapAnalysis?.important_gaps || [])
+    ].slice(0, 10);
 
     return (
         <MainLayout>
@@ -256,7 +262,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Skills Gap Section */}
-                {data?.gapAnalysis && data.gapAnalysis.gaps?.length > 0 && (
+                {displayGaps.length > 0 && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-900">Skills to Learn</h2>
@@ -268,12 +274,12 @@ export default function DashboardPage() {
                             </button>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {data.gapAnalysis.gaps.slice(0, 10).map((gap: any, i: number) => (
+                            {displayGaps.map((gap, i) => (
                                 <span
                                     key={i}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${gap.priority === 'high'
+                                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${gap.priority === 'critical'
                                         ? 'bg-red-100 text-red-700'
-                                        : gap.priority === 'medium'
+                                        : gap.priority === 'important'
                                             ? 'bg-amber-100 text-amber-700'
                                             : 'bg-blue-100 text-blue-700'
                                         }`}

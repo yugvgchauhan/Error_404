@@ -1,0 +1,26 @@
+[
+  {
+    "course_name": "Best Pytorch Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=pytorch",
+    "description": "There are numerous online courses available to help you learn PyTorch effectively. Some of the best options include the IBM Deep Learning with PyTorch, Keras and Tensorflow Professional Certificate, w...",
+    "skill_targeted": "pytorch",
+    "rating": 4.4,
+    "duration": "3 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.79099923
+  },
+  {
+    "course_name": "Computer Vision for Beginners Using PyTorch",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/learn/packt-deep-learning-computer-vision-for-beginners-using-pytorch-zbw0x",
+    "description": "you'll start with the basics of PyTorch, including tensor creation, manipulation, and the integration of NumPy arrays. You'll also work on practical implementations, such as building your first neural...",
+    "skill_targeted": "pytorch",
+    "rating": null,
+    "duration": "9 hours",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.60805947
+  }
+]

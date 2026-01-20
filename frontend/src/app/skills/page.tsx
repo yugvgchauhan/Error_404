@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { api, Skill, GapAnalysis } from '@/lib/api';
+import { api, Skill, GapAnalysis, GapItem } from '@/lib/api';
 import { MainLayout } from '@/components/layout/Sidebar';
 import { TrendingUp, Award, Target, AlertCircle, ChevronRight, BookOpen } from 'lucide-react';
 import {
@@ -66,14 +66,7 @@ export default function SkillsPage() {
     const skillsBySource: Record<string, Skill[]> = {};
     skills.forEach(skill => {
         let sources: string[] = ['other'];
-        if (typeof skill.sources === 'string') {
-            try {
-                const parsed = JSON.parse(skill.sources);
-                sources = Array.isArray(parsed) ? parsed : [skill.sources];
-            } catch {
-                sources = skill.sources.split(',').map(s => s.trim());
-            }
-        } else if (Array.isArray(skill.sources)) {
+        if (skill.sources && Array.isArray(skill.sources)) {
             sources = skill.sources;
         }
 
@@ -134,7 +127,7 @@ export default function SkillsPage() {
                             <div>
                                 <p className="text-sm text-gray-500">Job Match</p>
                                 <p className="text-3xl font-bold text-gray-900">
-                                    {gapAnalysis?.overall_readiness?.toFixed(0) || 0}%
+                                    {(gapAnalysis?.overall_readiness ? gapAnalysis.overall_readiness * 100 : 0).toFixed(0)}%
                                 </p>
                             </div>
                         </div>
@@ -217,7 +210,7 @@ export default function SkillsPage() {
                 </div>
 
                 {/* Skill Gaps */}
-                {gapAnalysis && (gapAnalysis.critical_gaps?.length > 0 || gapAnalysis.important_gaps?.length > 0) && (
+                {gapAnalysis && ((gapAnalysis.critical_gaps?.length ?? 0) > 0 || (gapAnalysis.important_gaps?.length ?? 0) > 0 || (gapAnalysis.emerging_gaps?.length ?? 0) > 0) && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -236,7 +229,7 @@ export default function SkillsPage() {
                             </button>
                         </div>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {gapAnalysis.critical_gaps?.map((gap: any, index: number) => (
+                            {gapAnalysis.critical_gaps?.map((gap: GapItem, index: number) => (
                                 <div
                                     key={`critical-${index}`}
                                     className="p-4 rounded-xl border bg-red-50 border-red-200"
@@ -248,11 +241,14 @@ export default function SkillsPage() {
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-500 mt-1">
-                                        Market demand: {Math.round((gap.market_demand || 0) * 100)}%
+                                        Market Importance: {Math.round((gap.market_importance || 0) * 100)}%
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                        Gap Score: {Math.round(gap.gap_score * 100)}%
                                     </p>
                                 </div>
                             ))}
-                            {gapAnalysis.important_gaps?.map((gap: any, index: number) => (
+                            {gapAnalysis.important_gaps?.map((gap: GapItem, index: number) => (
                                 <div
                                     key={`important-${index}`}
                                     className="p-4 rounded-xl border bg-amber-50 border-amber-200"
@@ -264,7 +260,26 @@ export default function SkillsPage() {
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-500 mt-1">
-                                        Market demand: {Math.round((gap.market_demand || 0) * 100)}%
+                                        Market Importance: {Math.round((gap.market_importance || 0) * 100)}%
+                                    </p>
+                                    <p className="text-xs text-amber-600 mt-1">
+                                        Gap Score: {Math.round(gap.gap_score * 100)}%
+                                    </p>
+                                </div>
+                            ))}
+                            {gapAnalysis.emerging_gaps?.map((gap: GapItem, index: number) => (
+                                <div
+                                    key={`emerging-${index}`}
+                                    className="p-4 rounded-xl border bg-blue-50 border-blue-200"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-medium text-gray-900">{gap.skill}</span>
+                                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                            emerging
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Market Importance: {Math.round((gap.market_importance || 0) * 100)}%
                                     </p>
                                 </div>
                             ))}

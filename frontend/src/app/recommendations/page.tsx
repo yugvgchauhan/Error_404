@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, Recommendation } from '@/lib/api';
 import { MainLayout } from '@/components/layout/Sidebar';
 import { BookOpen, ExternalLink, Clock, Search, Star, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 
@@ -25,7 +25,7 @@ interface CourseRecommendation {
 export default function RecommendationsPage() {
     const { user, loading: authLoading, userId } = useAuth();
     const router = useRouter();
-    const [recommendations, setRecommendations] = useState<CourseRecommendation[]>([]);
+    const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [searchSkill, setSearchSkill] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,21 +58,7 @@ export default function RecommendationsPage() {
             const result = await api.getRecommendedCourses(userId);
             console.log('Recommendations response:', result);
 
-            // Transform the response
-            const recs: CourseRecommendation[] = [];
-            const recsData = result.recommendations || [];
-
-            for (const item of recsData) {
-                if (item.courses && item.courses.length > 0) {
-                    recs.push({
-                        skill: item.skill || 'General',
-                        gap_priority: item.gap_priority,
-                        courses: item.courses,
-                    });
-                }
-            }
-
-            setRecommendations(recs);
+            setRecommendations(result.recommendations || []);
         } catch (err: any) {
             console.error('Failed to load recommendations:', err);
             setError(err.message || 'Failed to load recommendations');
@@ -188,8 +174,8 @@ export default function RecommendationsPage() {
                             <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${rec.gap_priority === 'critical'
-                                            ? 'bg-gradient-to-r from-red-500 to-orange-500'
-                                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                                        ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
                                         }`}>
                                         <BookOpen className="text-white" size={20} />
                                     </div>

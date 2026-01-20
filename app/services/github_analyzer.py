@@ -16,23 +16,29 @@ class GitHubAnalyzer:
         self.cache_dir = "app/data/github_cache"
         os.makedirs(self.cache_dir, exist_ok=True)
     
-    def extract_username_from_url(self, github_url: str) -> Optional[str]:
-        """Extract GitHub username from URL."""
+    def extract_info_from_url(self, github_url: str) -> Dict:
+        """Extract GitHub username and optionally repository name from URL."""
         if not github_url:
-            return None
+            return {'username': None, 'repo_name': None}
         
-        # Pattern: https://github.com/username
-        pattern = r'github\.com/([^/\s]+)'
-        match = re.search(pattern, github_url)
+        # Clean URL
+        url_path = github_url.split('github.com/')[-1].split('?')[0].strip('/')
+        parts = url_path.split('/')
         
-        if match:
-            return match.group(1)
-        return None
+        info = {'username': None, 'repo_name': None}
+        if len(parts) >= 1:
+            info['username'] = parts[0]
+        if len(parts) >= 2:
+            # Avoid cases like 'sponsors', 'projects', etc. which aren't repo names in user context
+            if parts[1] not in ['repositories', 'projects', 'packages', 'stars', 'followers', 'following']:
+                info['repo_name'] = parts[1]
+            
+        return info
     
     def fetch_user_repos(self, username: str, max_repos: int = 10) -> List[Dict]:
         """
         Fetch public repositories for a GitHub user.
-        Uses GitHub REST API (no auth required for public repos).
+        Uses GitHub REST API.
         """
         # Check cache first
         cache_file = os.path.join(self.cache_dir, f"{username}_repos.json")
@@ -48,82 +54,62 @@ class GitHubAnalyzer:
         print(f"🔍 Fetching GitHub repos for {username}...")
         
         try:
-            # GitHub API endpoint
             url = f"https://api.github.com/users/{username}/repos"
-            
-            # Parameters
-            params = {
-                'sort': 'updated',
-                'per_page': max_repos,
-                'type': 'owner'  # Only repos owned by user
-            }
-            
-            # Headers (User-Agent required by GitHub)
+            params = {'sort': 'updated', 'per_page': max_repos, 'type': 'owner'}
             headers = {
                 'User-Agent': 'Healthcare-Skill-Intelligence-App',
                 'Accept': 'application/vnd.github.v3+json'
             }
             
             response = requests.get(url, params=params, headers=headers, timeout=10)
-            
             if response.status_code == 200:
                 repos = response.json()
-                
-                # Cache the response
                 with open(cache_file, 'w') as f:
                     json.dump(repos, f, indent=2)
-                
-                print(f"✅ Fetched {len(repos)} repositories")
                 return repos
-            
-            elif response.status_code == 404:
-                print(f"❌ GitHub user '{username}' not found")
-                return []
-            
-            else:
-                print(f"❌ GitHub API error: {response.status_code}")
-                return []
-        
+            return []
         except Exception as e:
             print(f"❌ Error fetching GitHub repos: {e}")
             return []
+
+    def fetch_single_repo(self, username: str, repo_name: str) -> Optional[Dict]:
+        """Fetch data for a single specific repository."""
+        print(f"🔍 Fetching specific GitHub repo: {username}/{repo_name}...")
+        try:
+            url = f"https://api.github.com/repos/{username}/{repo_name}"
+            headers = {
+                'User-Agent': 'Healthcare-Skill-Intelligence-App',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except Exception as e:
+            print(f"❌ Error fetching single repo: {e}")
+            return None
     
     def fetch_readme(self, username: str, repo_name: str) -> Optional[str]:
-        """Fetch README content from a repository."""
+        """
+        Fetch README content from a repository using GitHub API.
+        """
         print(f"   📄 Fetching README for {repo_name}...")
-        
         try:
-            # Try common README filenames
-            readme_names = ['README.md', 'README.MD', 'Readme.md', 'readme.md', 'README.txt', 'README']
-            
-            for readme_name in readme_names:
-                url = f"https://raw.githubusercontent.com/{username}/{repo_name}/main/{readme_name}"
-                response = requests.get(url, timeout=10)
-                
-                if response.status_code == 200:
-                    return response.text
-                
-                # Try 'master' branch if 'main' doesn't work
-                url = f"https://raw.githubusercontent.com/{username}/{repo_name}/master/{readme_name}"
-                response = requests.get(url, timeout=10)
-                
-                if response.status_code == 200:
-                    return response.text
-            
-            print(f"   ⚠️ README not found for {repo_name}")
+            url = f"https://api.github.com/repos/{username}/{repo_name}/readme"
+            headers = {
+                'User-Agent': 'Healthcare-Skill-Intelligence-App',
+                'Accept': 'application/vnd.github.v3.raw'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                return response.text
             return None
-        
         except Exception as e:
             print(f"   ❌ Error fetching README: {e}")
             return None
     
     def extract_skills_from_repo(self, repo_data: Dict, readme_content: Optional[str] = None) -> Tuple[List[str], Dict]:
-        """
-        Extract skills from repository metadata and README.
-        
-        Returns:
-            (skills_list, metadata)
-        """
+        """Extract skills from repository metadata and README."""
         all_text = ""
         metadata = {
             'repo_name': repo_data.get('name', ''),
@@ -134,119 +120,88 @@ class GitHubAnalyzer:
             'forks': repo_data.get('forks_count', 0)
         }
         
-        # 1. Extract from repository name
-        all_text += repo_data.get('name', '') + " "
+        all_text += f"{metadata['repo_name']} {metadata['description']} {metadata['language']} {' '.join(metadata['topics'])} "
         
-        # 2. Extract from description
-        if repo_data.get('description'):
-            all_text += repo_data['description'] + " "
-        
-        # 3. Extract from primary language
-        if repo_data.get('language'):
-            all_text += repo_data['language'] + " "
-        
-        # 4. Extract from topics/tags
-        if repo_data.get('topics'):
-            all_text += " ".join(repo_data['topics']) + " "
-        
-        # 5. Extract from README
         if readme_content:
-            # Limit README to first 2000 characters to avoid too much noise
-            all_text += readme_content[:2000] + " "
+            all_text += readme_content[:5000] + " "
         
-        # Use skill extractor to find matching skills
         skills = self.skill_extractor.extract_skills_from_text(all_text)
-        
         return (skills, metadata)
     
     def analyze_github_profile(
         self, 
         github_url: str, 
         max_repos: int = 10,
-        fetch_readmes: bool = True
+        fetch_readmes: bool = True,
+        llm_extractor = None
     ) -> Dict:
-        """
-        Complete GitHub profile analysis.
-        
-        Returns:
-            {
-                'username': str,
-                'total_repos': int,
-                'repos_analyzed': int,
-                'skills_found': {skill: (proficiency, confidence)},
-                'repo_details': [...]
-            }
-        """
-        username = self.extract_username_from_url(github_url)
+        """Complete GitHub profile or repository analysis."""
+        info = self.extract_info_from_url(github_url)
+        username = info['username']
+        specific_repo = info['repo_name']
         
         if not username:
-            return {
-                'error': 'Invalid GitHub URL',
-                'username': None,
-                'skills_found': {}
-            }
+            return {'error': 'Invalid GitHub URL', 'username': None, 'skills_found': {}}
         
-        # Fetch repositories
-        repos = self.fetch_user_repos(username, max_repos)
+        # Determine which repos to analyze
+        repos = []
+        if specific_repo:
+            repo_data = self.fetch_single_repo(username, specific_repo)
+            if repo_data:
+                repos = [repo_data]
+            else:
+                return {'error': f'Repository {username}/{specific_repo} not found', 'username': username}
+        else:
+            repos = self.fetch_user_repos(username, max_repos)
         
         if not repos:
-            return {
-                'username': username,
-                'total_repos': 0,
-                'repos_analyzed': 0,
-                'skills_found': {},
-                'repo_details': []
-            }
+            return {'username': username, 'total_repos': 0, 'repos_analyzed': 0, 'skills_found': {}, 'repo_details': []}
         
-        # Analyze each repository
         all_skills = {}
         repo_details = []
         
         for repo in repos:
             repo_name = repo.get('name', 'unknown')
+            readme_content = self.fetch_readme(username, repo_name) if fetch_readmes else None
             
-            # Fetch README if enabled
-            readme_content = None
-            if fetch_readmes:
-                readme_content = self.fetch_readme(username, repo_name)
-            
-            # Extract skills
+            # Extract skills using NLP
             skills, metadata = self.extract_skills_from_repo(repo, readme_content)
             
-            # Calculate proficiency based on repo quality indicators
-            base_proficiency = 0.65  # GitHub projects show practical skills
+            # Use LLM for deeper analysis if available
+            if llm_extractor and (metadata['description'] or readme_content):
+                print(f"   🤖 Refining skills for {repo_name} using LLM...")
+                context = f"Repo: {repo_name}. Description: {metadata['description']}. Language: {metadata['language']}. Topics: {metadata['topics']}."
+                if readme_content:
+                    context += f"\nREADME Snapshot: {readme_content[:3000]}"
+                
+                llm_skills = llm_extractor.extract_skills_with_proficiency(context)
+                for item in llm_skills:
+                    s_name = item['skill_name']
+                    s_prof = item['proficiency']
+                    s_conf = item['confidence']
+                    
+                    if s_name not in all_skills or s_prof > all_skills[s_name][0]:
+                        all_skills[s_name] = (s_prof, s_conf)
+                    if s_name not in skills:
+                        skills.append(s_name)
+            
+            # Calculate proficiency for non-LLM found skills or base values
+            base_proficiency = 0.65
             confidence = 0.75
             
-            # Boost for stars (community validation)
             stars = metadata['stars']
-            if stars > 50:
-                base_proficiency += 0.15
-                confidence += 0.10
-            elif stars > 10:
-                base_proficiency += 0.10
-                confidence += 0.05
-            elif stars > 0:
-                base_proficiency += 0.05
+            if stars > 10: base_proficiency += 0.10; confidence += 0.05
+            elif stars > 0: base_proficiency += 0.05
             
-            # Boost for forks (others building on it)
-            if metadata['forks'] > 10:
-                base_proficiency += 0.10
-            
-            # Cap proficiency
             proficiency = min(base_proficiency, 0.90)
             confidence = min(confidence, 0.95)
             
-            # Store skills with proficiency
             for skill in skills:
                 if skill not in all_skills:
                     all_skills[skill] = (proficiency, confidence)
                 else:
-                    # Take max proficiency if skill appears in multiple repos
                     existing_prof, existing_conf = all_skills[skill]
-                    all_skills[skill] = (
-                        max(existing_prof, proficiency),
-                        max(existing_conf, confidence)
-                    )
+                    all_skills[skill] = (max(existing_prof, proficiency), max(existing_conf, confidence))
             
             repo_details.append({
                 'name': repo_name,
@@ -257,11 +212,11 @@ class GitHubAnalyzer:
                 'skills_found': skills,
                 'url': repo.get('html_url', '')
             })
-            
             print(f"   ✅ {repo_name}: {len(skills)} skills found")
         
         return {
             'username': username,
+            'repo_name': specific_repo,
             'total_repos': len(repos),
             'repos_analyzed': len(repo_details),
             'skills_found': all_skills,

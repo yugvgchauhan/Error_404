@@ -56,6 +56,10 @@ class UserResponse(BaseModel):
     github_url: Optional[str]
     resume_path: Optional[str]
     has_resume: bool = False
+    profile_completion: float = 0.0
+    total_skills: int = 0
+    total_projects: int = 0
+    total_courses: int = 0
     created_at: datetime
     
     class Config:

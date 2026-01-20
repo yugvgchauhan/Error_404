@@ -1,0 +1,62 @@
+[
+  {
+    "course_name": "Best Data Science Courses & Certificates [2026]",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/courses?query=data%20science&topic=Data%20Science",
+    "description": "There are numerous online courses available for learning data science. Some of the best options include the IBM Data Science Professional Certificate, which covers essential skills and tools, and the ...",
+    "skill_targeted": "Data Science",
+    "rating": 4.5,
+    "duration": "6 Months",
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9978173
+  },
+  {
+    "course_name": "Coursera | Degrees, Certificates, & Free Online Courses",
+    "platform": "Coursera",
+    "url": "https://www.coursera.org/",
+    "description": "Coursera\u2019s best-known courses and certificates are offered by leading universities and companies in the fields of AI, data science, cybersecurity, and software engineering. Many learners begin with th...",
+    "skill_targeted": "Data Science",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $49+ (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.9967269
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOorpd-wkUlbpdrhI6XDY3AgoVRnvF2Dkl2fyt0fOpoCJcreqqwR2",
+    "description": "$61,126 average salary (US)\u202236,600 open roles (US)\n\n   Rating: 4.5 out of 5 4.5 \n   3.8K ratings \n   28.4 total hours \n\nImage 28\n\n### Data Scientist\n\n$126,629 average salary (US)\u202220,800 open roles (US...",
+    "skill_targeted": "Data Science",
+    "rating": 4.5,
+    "duration": null,
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.99128854
+  },
+  {
+    "course_name": "Udemy: Online Courses - Learn Anything, On Your Schedule",
+    "platform": "Udemy",
+    "url": "https://www.udemy.com/?srsltid=AfmBOopCG8d-j6Nn663b5az5B7MakaXfm2sABhZvb5kNaL_yfoTIRPgN",
+    "description": "$61,126 average salary (US)\u202236,600 open roles (US)\n\n   Rating: 4.5 out of 5 4.5 \n   3.8K ratings \n   28.4 total hours \n\nImage 28\n\n### Data Scientist\n\n$126,629 average salary (US)\u202220,800 open roles (US...",
+    "skill_targeted": "Data Science",
+    "rating": 4.5,
+    "duration": null,
+    "cost": "$10-200 (one-time)",
+    "source": "tavily_search",
+    "relevance_score": 0.99128854
+  },
+  {
+    "course_name": "edX | Online Courses, Certificates & Degrees from Leading ...",
+    "platform": "edX",
+    "url": "https://www.edx.org/",
+    "description": "Most popular programs\n\n CS50's Introduction to Computer ScienceHarvardX | Course\n Artificial Intelligence: Implications for Business StrategyMIT Sloan School of Management | Executive Education\n Suppl...",
+    "skill_targeted": "Data Science",
+    "rating": null,
+    "duration": null,
+    "cost": "Free (audit) / $50-300 (certificate)",
+    "source": "tavily_search",
+    "relevance_score": 0.98571813
+  }
+]
